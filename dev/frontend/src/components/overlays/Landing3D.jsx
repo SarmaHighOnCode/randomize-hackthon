@@ -1,55 +1,52 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { Float } from '@react-three/drei'
 import Monitor from './Monitor'
+import OfficeEnvironment from './OfficeEnvironment'
 import { useGameStore } from '../../store/useGameStore'
 
 const Landing3D = () => {
   const setGameState = useGameStore((state) => state.setGameState)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  const handleStart = () => {
+    if (isTransitioning) return
+    setIsTransitioning(true)
+    
+    // Play TV Cut transition for 1.2s before swapping to MAIN_MENU
+    setTimeout(() => {
+      setGameState('MAIN_MENU')
+      setIsTransitioning(false) // Reset so the TV screen turns back on to reveal the menu!
+    }, 1200)
+  }
 
   return (
     <div className="w-full h-full bg-black relative">
-      <Canvas shadows camera={{ position: [0, 0, 8], fov: 35 }}>
+      <Canvas shadows gl={{ antialias: false }} camera={{ position: [0, 0, 8], fov: 45 }}>
         <color attach="background" args={['#030303']} />
-        
-        {/* GLOBAL AMBIENCE */}
-        <ambientLight intensity={0.2} />
-        
-        {/* MAIN KEY LIGHT (Top Right) */}
-        <spotLight 
-          position={[5, 8, 5]} 
-          angle={0.25} 
+
+        {/* The New Stanley Parable warm office environment */}
+        <OfficeEnvironment />
+
+         {/* Monitor Key Light (still keep some specialized hardware lighting) */}
+         <spotLight 
+          position={[0, 5, 2]} 
+          angle={0.4} 
           penumbra={1} 
-          intensity={50} 
-          castShadow 
-          color="#ffffff"
+          intensity={20} 
+          color="#06b6d4"
         />
 
-        {/* CYAN RIM LIGHTS (To define edges) */}
-        <pointLight position={[3, 0, 2]} intensity={15} color="#06b6d4" distance={10} />
-        <pointLight position={[-3, 0, 2]} intensity={15} color="#06b6d4" distance={10} />
-        <pointLight position={[0, 4, 1]} intensity={10} color="#ffffff" distance={8} />
-
-        {/* BACKLIGHT (To separate monitor from background) */}
-        <pointLight position={[0, 0, -3]} intensity={5} color="#06b6d4" distance={10} />
-
-        {/* GROUNDED FLOOR (Catching light for depth) */}
-        <group position={[0, -2, 0]}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-            <planeGeometry args={[20, 20]} />
-            <meshStandardMaterial color="#050505" roughness={0.8} metalness={0.2} />
-          </mesh>
-          <gridHelper args={[20, 20, '#06b6d4', '#011115']} position={[0, 0.01, 0]} transparent opacity={0.2} />
-        </group>
-
         {/* THE 3D MONITOR */}
-        <Float speed={1.2} rotationIntensity={0.15} floatIntensity={0.3}>
-          <Monitor onStart={() => setGameState('MAIN_MENU')} />
-        </Float>
+        <group>
+           <Monitor transitioning={isTransitioning} onStart={handleStart} />
+        </group>
       </Canvas>
       
       {/* Cinematic Vignette */}
       <div className="absolute inset-0 pointer-events-none z-50 shadow-[inset_0_0_200px_rgba(0,0,0,1)]" />
+      
+      {/* Transition Fade out overlay */}
+      <div className={`absolute inset-0 bg-black pointer-events-none transition-opacity duration-1000 ${isTransitioning ? 'opacity-100' : 'opacity-0 z-0'}`} style={{ zIndex: isTransitioning ? 999 : -1, transitionDelay: '1000ms' }} />
     </div>
   )
 }

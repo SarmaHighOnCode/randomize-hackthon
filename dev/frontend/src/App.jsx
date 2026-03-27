@@ -7,8 +7,7 @@ function App() {
 
   return (
     <div className="w-full h-full bg-black text-nexus-accent overflow-hidden selection:bg-nexus-accent selection:text-black font-mono">
-      {gameState === 'START' && <Landing3D />}
-      {gameState === 'MAIN_MENU' && <MainMenu />}
+      {['START', 'MAIN_MENU'].includes(gameState) && <Landing3D />}
       
       {/* Placeholder for 3D/2D game phases */}
       {gameState.startsWith('3D_') && (
