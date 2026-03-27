@@ -44,14 +44,8 @@ export class LobbyScene implements GameScene {
       ctx.scene.add(fixture2);
 
       // Subtle point lights under each fixture
-      const pLight = new THREE.PointLight(0xeeeeff, 0.4, 8);
-      pLight.position.set(-4, 7.5, lz);
-      ctx.scene.add(pLight);
-
-      const pLight2 = new THREE.PointLight(0xeeeeff, 0.4, 8);
-      pLight2.position.set(4, 7.5, lz);
-      ctx.scene.add(pLight2);
-    }
+      
+          }
 
     // --- ARCHITECTURE: SOLID ENCLOSURE ---
 

@@ -466,15 +466,16 @@ export function createFluorescentLight(x: number, z: number, height: number): TH
     new THREE.MeshStandardMaterial({
       color: 0xffffff,
       emissive: 0xeeeeff,
-      emissiveIntensity: 2.0,
+      emissiveIntensity: 1.0, // Reduced from 2.0 to lower the bloom
     })
   );
   fixture.position.set(x, height - 0.02, z);
   group.add(fixture);
 
-  const light = new THREE.PointLight(0xeeeeff, 0.8, 8);
-  light.position.set(x, height - 0.1, z);
-  group.add(light);
+  // Removed laggy point light entirely to fix overblown ceiling spheres
+  // const light = new THREE.PointLight(0xeeeeff, 0.8, 8);
+  // light.position.set(x, height - 0.1, z);
+  // group.add(light);
 
   return group;
 }

@@ -15,6 +15,7 @@ import { InterviewScene } from './scenes/InterviewScene';
 import { OfficeScene } from './scenes/OfficeScene';
 import { DeskScene } from './scenes/DeskScene';
 import { DIALOGUE } from './data/dialogue';
+import { AudioSystem } from './engine/AudioSystem';
 
 export default function Game3D() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -37,6 +38,7 @@ export default function Game3D() {
   const sceneManagerRef = useRef<SceneManager | null>(null);
   const playerControllerRef = useRef<PlayerController | null>(null);
   const interviewSceneRef = useRef<InterviewScene | null>(null);
+  const audioRef = useRef<AudioSystem | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -74,6 +76,11 @@ export default function Game3D() {
     const player = new PlayerController(camera, canvas);
     playerControllerRef.current = player;
 
+    // Audio
+    const audio = new AudioSystem();
+    audio.start();
+    audioRef.current = audio;
+
     // Dialogue
     const dialogue = new DialogueSystem(setDialogueState);
 
@@ -103,6 +110,7 @@ export default function Game3D() {
       hideChoice: () => setChoiceState(null),
       showNarrator: (text) => setNarratorText(text),
       hideNarrator: () => setNarratorText(null),
+      audio,
     };
 
     // Scene Manager
@@ -196,7 +204,11 @@ export default function Game3D() {
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Escape') {
-        setEscMenuOpen(prev => !prev);
+        setEscMenuOpen(prev => {
+          const next = !prev;
+          audioRef.current?.setMuted(next);
+          return next;
+        });
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -207,6 +219,7 @@ export default function Game3D() {
       window.removeEventListener('keydown', onKeyDown);
       renderer.dispose();
       composer.dispose();
+      audio.dispose();
     };
   }, []);
 
@@ -274,35 +287,35 @@ export default function Game3D() {
           <button 
             className="esc-menu-btn" 
             disabled={!unlockedLevels.includes('street')}
-            onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('street'); }}>
+            onClick={() => { setEscMenuOpen(false); audioRef.current?.setMuted(false); sceneManagerRef.current?.transitionTo('street'); }}>
             STREET {!unlockedLevels.includes('street') && <span className="button-lock-icon">🔒</span>}
           </button>
           
           <button 
             className="esc-menu-btn" 
             disabled={!unlockedLevels.includes('lobby')}
-            onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('lobby'); }}>
+            onClick={() => { setEscMenuOpen(false); audioRef.current?.setMuted(false); sceneManagerRef.current?.transitionTo('lobby'); }}>
             LOBBY {!unlockedLevels.includes('lobby') && <span className="button-lock-icon">🔒</span>}
           </button>
 
           <button 
             className="esc-menu-btn" 
             disabled={!unlockedLevels.includes('interview')}
-            onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('interview'); }}>
+            onClick={() => { setEscMenuOpen(false); audioRef.current?.setMuted(false); sceneManagerRef.current?.transitionTo('interview'); }}>
             INTERVIEW {!unlockedLevels.includes('interview') && <span className="button-lock-icon">🔒</span>}
           </button>
 
           <button 
             className="esc-menu-btn" 
             disabled={!unlockedLevels.includes('office')}
-            onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('office'); }}>
+            onClick={() => { setEscMenuOpen(false); audioRef.current?.setMuted(false); sceneManagerRef.current?.transitionTo('office'); }}>
             OFFICE {!unlockedLevels.includes('office') && <span className="button-lock-icon">🔒</span>}
           </button>
 
           <button 
             className="esc-menu-btn" 
             disabled={!unlockedLevels.includes('desk')}
-            onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('desk'); }}>
+            onClick={() => { setEscMenuOpen(false); audioRef.current?.setMuted(false); sceneManagerRef.current?.transitionTo('desk'); }}>
             YOUR DESK {!unlockedLevels.includes('desk') && <span className="button-lock-icon">🔒</span>}
           </button>
         </div>
