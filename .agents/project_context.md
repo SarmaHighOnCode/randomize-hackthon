@@ -11,7 +11,7 @@ The approach is to tackle this problem statement by creating an engaging website
 #### Gameplay Mechanics & Flow
 - **Initial Phase (3D)**: The game begins with an initial story-driven phase lasting about 10 minutes. This part occurs in a 3D environment where the player completes opening tasks.
 - **Transition to 2D**: Following the initial 3D segment, the player's character moves to a computer, and the game transitions into a 2D interface.
-- **Progression System**: The user's progress throughout the game will be stored locally in the website's cache. Players will have the functionality to clear their history to reset the game to zero.
+- **Progression System**: The user's progress and **high score** throughout the game will be stored locally in the website's cache (`localStorage`). This includes current Act progress, total productivity, and a history of previous playthroughs. Players will have the functionality to clear their history to reset the game to zero.
 
 #### Artistic Direction
 - **Inspiration**: The narrative style and gameplay feel will draw inspiration from *The Stanley Parable*.
