@@ -190,7 +190,8 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -225,4 +226,22 @@
 .esc-menu-btn:hover {
   background: #4a6a7a;
   color: #0a0a0a;
+}
+
+.esc-menu-btn:disabled {
+  border-color: #333;
+  color: #555;
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.esc-menu-btn:disabled:hover {
+  background: rgba(0, 0, 0, 0.5);
+  color: #555;
+}
+
+.button-lock-icon {
+  margin-left: 12px;
+  font-size: 14px;
+  color: #555;
 }

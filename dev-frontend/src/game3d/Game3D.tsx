@@ -29,6 +29,7 @@ export default function Game3D() {
   const [narratorText, setNarratorText] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [escMenuOpen, setEscMenuOpen] = useState(false);
+  const [unlockedLevels, setUnlockedLevels] = useState<string[]>(['street']);
 
   // Refs to hold mutable game state
   const sceneManagerRef = useRef<SceneManager | null>(null);
@@ -82,7 +83,10 @@ export default function Game3D() {
       player,
       dialogue,
       triggers,
-      transitionTo: (name) => sm.transitionTo(name),
+      transitionTo: (name) => {
+        setUnlockedLevels(prev => prev.includes(name) ? prev : [...prev, name]);
+        sm.transitionTo(name);
+      },
       setFade: setFadeOpacity,
       showChoice: (options, onSelect) => setChoiceState({ options, onSelect }),
       hideChoice: () => setChoiceState(null),
@@ -110,7 +114,7 @@ export default function Game3D() {
     triggerHandler = (id: string) => {
       switch (id) {
         case 'door':
-          sm.transitionTo('lobby');
+          ctx.transitionTo('lobby');
           break;
         case 'receptionist':
           player.disable();
@@ -119,7 +123,7 @@ export default function Game3D() {
           });
           break;
         case 'hallway':
-          sm.transitionTo('interview');
+          ctx.transitionTo('interview');
           break;
         case 'sit':
           interviewScene.onSitDown(ctx);
@@ -137,14 +141,14 @@ export default function Game3D() {
           });
           break;
         case 'yourDesk':
-          sm.transitionTo('desk');
+          ctx.transitionTo('desk');
           break;
       }
     };
 
     // Start with street scene
     setLoading(false);
-    sm.transitionTo('street');
+    ctx.transitionTo('street');
 
     // Game loop
     const clock = new THREE.Clock();
@@ -255,10 +259,41 @@ export default function Game3D() {
               if (canvas) canvas.requestPointerLock();
             }
           }}>RESUME</button>
-          <button className="esc-menu-btn" onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('street'); }}>STREET</button>
-          <button className="esc-menu-btn" onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('lobby'); }}>LOBBY</button>
-          <button className="esc-menu-btn" onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('interview'); }}>INTERVIEW</button>
-          <button className="esc-menu-btn" onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('office'); }}>OFFICE</button>
+          
+          <button 
+            className="esc-menu-btn" 
+            disabled={!unlockedLevels.includes('street')}
+            onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('street'); }}>
+            STREET {!unlockedLevels.includes('street') && <span className="button-lock-icon">🔒</span>}
+          </button>
+          
+          <button 
+            className="esc-menu-btn" 
+            disabled={!unlockedLevels.includes('lobby')}
+            onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('lobby'); }}>
+            LOBBY {!unlockedLevels.includes('lobby') && <span className="button-lock-icon">🔒</span>}
+          </button>
+
+          <button 
+            className="esc-menu-btn" 
+            disabled={!unlockedLevels.includes('interview')}
+            onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('interview'); }}>
+            INTERVIEW {!unlockedLevels.includes('interview') && <span className="button-lock-icon">🔒</span>}
+          </button>
+
+          <button 
+            className="esc-menu-btn" 
+            disabled={!unlockedLevels.includes('office')}
+            onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('office'); }}>
+            OFFICE {!unlockedLevels.includes('office') && <span className="button-lock-icon">🔒</span>}
+          </button>
+
+          <button 
+            className="esc-menu-btn" 
+            disabled={!unlockedLevels.includes('desk')}
+            onClick={() => { setEscMenuOpen(false); sceneManagerRef.current?.transitionTo('desk'); }}>
+            YOUR DESK {!unlockedLevels.includes('desk') && <span className="button-lock-icon">🔒</span>}
+          </button>
         </div>
       )}
       </div>
