@@ -33,7 +33,7 @@ export class LobbyScene implements GameScene {
       const fixtureMat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
         emissive: 0xeeeeff,
-        emissiveIntensity: 1.5,
+        emissiveIntensity: 0.3,
       });
       const fixture = new THREE.Mesh(fixtureGeo, fixtureMat);
       fixture.position.set(-4, 7.96, lz);
@@ -229,10 +229,11 @@ export class LobbyScene implements GameScene {
     const logoMesh4 = createBox(5.0, 0.8, 0.2, 0x111111, [0, 2.9, -11.8]);
     ctx.scene.add(logoMesh1); ctx.scene.add(logoMesh2); ctx.scene.add(logoMesh3); ctx.scene.add(logoMesh4);
 
-    const logoInner = createBox(3.4, 2.4, 0.15, 0xffffff, [0, 4.5, -11.85]);
+const logoInner = createTextSign('N E X U S\nC O R P', 3.4, 2.4, '#0a1a2a', '#44aaff', 48);
+    logoInner.position.set(0, 4.5, -11.83);
     const logoMat = logoInner.material as THREE.MeshStandardMaterial;
-    logoMat.emissive = new THREE.Color(0x3388ff);
-    logoMat.emissiveIntensity = 1.0;
+    logoMat.emissive = new THREE.Color(0x113366);
+    logoMat.emissiveIntensity = 0.5;
     ctx.scene.add(logoInner);
 
     // Spotlight on logo

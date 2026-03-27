@@ -355,7 +355,7 @@ export function createTextSign(
 ): THREE.Mesh {
   const canvas = document.createElement('canvas');
   // High resolution for clear text, scaled up by 4
-  const scale = 4;
+  const scale = 8;
   canvas.width = 512 * scale;
   canvas.height = Math.floor(512 * scale * (height / width));
   const ctx = canvas.getContext('2d')!;
@@ -408,7 +408,7 @@ export function createTextSign(
   // despite the whole screen getting pixelated.
   texture.minFilter = THREE.LinearMipmapLinearFilter;
   texture.magFilter = THREE.LinearFilter;
-  // texture.anisotropy = 4; (optional but helpful if viewed at an angle)
+  texture.anisotropy = 4;
   
   const geo = new THREE.PlaneGeometry(width, height);
   const mat = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.9, transparent: true });
@@ -466,7 +466,7 @@ export function createFluorescentLight(x: number, z: number, height: number): TH
     new THREE.MeshStandardMaterial({
       color: 0xffffff,
       emissive: 0xeeeeff,
-      emissiveIntensity: 1.0, // Reduced from 2.0 to lower the bloom
+      emissiveIntensity: 0.4, // Lowered even further to prevent bloom glare
     })
   );
   fixture.position.set(x, height - 0.02, z);
