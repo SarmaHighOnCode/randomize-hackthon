@@ -213,12 +213,12 @@ export default function Game3D() {
   return (
     <>
       {loading && <div className="loading-screen">LOADING...</div>}
-      <div className="game-container" style={{ visibility: loading ? 'hidden' : 'visible' }}>
-        <canvas ref={canvasRef} />
-        <div className="crosshair" />
+      <div className="game-container">
+        <canvas ref={canvasRef} style={{ display: loading ? 'none' : 'block' }} />
+        <div className="crosshair" style={{ display: loading ? 'none' : 'block' }} />
 
       {/* Fade overlay */}
-      <div className="fade-overlay" style={{ opacity: fadeOpacity }} />
+      {!loading && <div className="fade-overlay" style={{ opacity: fadeOpacity }} />}
 
       {/* Dialogue */}
       {dialogueState.active && (
