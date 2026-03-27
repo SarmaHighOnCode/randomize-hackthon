@@ -7,8 +7,18 @@ import {
 
 export class OfficeScene implements GameScene {
   name = 'office';
+  private npcs: THREE.Group[] = [];
+  private fluorLights: THREE.PointLight[] = [];
+  private flickerTimers: number[] = [];
+  private dustParticles: THREE.Points | null = null;
+  private elapsedTime = 0;
 
   setup(ctx: SceneContext) {
+    this.npcs = [];
+    this.fluorLights = [];
+    this.flickerTimers = [];
+    this.elapsedTime = 0;
+
     addLighting(ctx.scene);
     ctx.scene.background = new THREE.Color(0x1a1e24);
 
@@ -36,46 +46,71 @@ export class OfficeScene implements GameScene {
     rightWall.rotation.y = Math.PI / 2;
     ctx.scene.add(rightWall);
 
-    // Fluorescent lights
+    // Fluorescent lights (with flicker)
     for (let x = -4; x <= 4; x += 4) {
       for (let z = -6; z <= 6; z += 4) {
-        ctx.scene.add(createFluorescentLight(x, z, 3.2));
+        const lightGroup = createFluorescentLight(x, z, 3.2);
+        ctx.scene.add(lightGroup);
+        // Grab point light for flickering
+        lightGroup.traverse((child) => {
+          if (child instanceof THREE.PointLight) {
+            this.fluorLights.push(child);
+            this.flickerTimers.push(Math.random() * 10);
+          }
+        });
       }
     }
 
     // Desk pods — 3 rows of 4
-    const desks: THREE.Group[] = [];
     for (let row = 0; row < 3; row++) {
       for (let col = 0; col < 4; col++) {
         const x = -4.5 + col * 3;
         const z = -6 + row * 4;
         const desk = createDesk(x, z);
-        desks.push(desk);
         ctx.scene.add(desk);
         ctx.scene.add(createChair(x, z + 0.8, Math.PI));
       }
     }
 
-    // NPC Coworkers
-    // Printer coworker
-    const printerNPC = createNPC(5.5, -4, 0x5a6a5a, 'coworkerPrinter');
+    // NPC Coworkers — properly seated with expressions
+    // Printer coworker (standing near printer)
+    const printerNPC = createNPC(5.5, -4, {
+      bodyColor: 0x5a6a5a,
+      label: 'coworkerPrinter',
+      facing: -Math.PI / 2,
+    });
     ctx.scene.add(printerNPC);
+    this.npcs.push(printerNPC);
 
-    // Desk coworker (seated — scaled down)
-      const deskNPC = createNPC(-1.5, -5.2, 0x6a5a5a, 'coworkerDesk');
-      deskNPC.scale.y = 0.7;
-      deskNPC.position.y = 0.3;
-      ctx.scene.add(deskNPC);
+    // Desk coworker (seated)
+    const deskNPC = createNPC(-1.5, -5.2, {
+      bodyColor: 0x6a5a5a,
+      label: 'coworkerDesk',
+      facing: Math.PI,
+    });
+    deskNPC.scale.y = 0.7;
+    deskNPC.position.y = 0.3;
+    ctx.scene.add(deskNPC);
+    this.npcs.push(deskNPC);
 
-      // Two more ambient NPCs
-      const npc3 = createNPC(1.5, -1.2, 0x5a5a6a);
-      npc3.scale.y = 0.7;
-      npc3.position.y = 0.3;
-      ctx.scene.add(npc3);
-
-      const npc4 = createNPC(-4.5, 2.8, 0x6a6a5a);
-    npc4.position.y = 0.3;
-    ctx.scene.add(npc4);
+    // Ambient NPCs (seated at desks)
+    const seatedPositions = [
+      { x: 1.5, z: -5.2, color: 0x5a5a6a },
+      { x: -4.5, z: -1.2, color: 0x6a6a5a },
+      { x: 4.5, z: -1.2, color: 0x5a6a6a },
+      { x: -1.5, z: 2.8, color: 0x6a5a6a },
+      { x: 1.5, z: 2.8, color: 0x5a5a5a },
+    ];
+    for (const pos of seatedPositions) {
+      const npc = createNPC(pos.x, pos.z, {
+        bodyColor: pos.color,
+        facing: Math.PI,
+      });
+      npc.scale.y = 0.7;
+      npc.position.y = 0.3;
+      ctx.scene.add(npc);
+      this.npcs.push(npc);
+    }
 
     // Printer area
     const printer = createBox(0.6, 0.4, 0.4, 0x7a7a7a, [6, 0.8, -4]);
@@ -147,6 +182,10 @@ export class OfficeScene implements GameScene {
     nameTag.rotation.x = -Math.PI / 4;
     ctx.scene.add(nameTag);
 
+    // Floating dust particles
+    this.dustParticles = this.createDustParticles();
+    ctx.scene.add(this.dustParticles);
+
     // Player start
     ctx.player.camera.position.set(0, 1.7, 9);
     ctx.player.enable();
@@ -186,6 +225,77 @@ export class OfficeScene implements GameScene {
     ]);
   }
 
-  update(_delta: number, _ctx: SceneContext) {}
-  cleanup() {}
+  private createDustParticles(): THREE.Points {
+    const count = 120;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 16;
+      positions[i * 3 + 1] = Math.random() * 3;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      color: 0xccccaa,
+      size: 0.02,
+      transparent: true,
+      opacity: 0.4,
+    });
+    return new THREE.Points(geo, mat);
+  }
+
+  update(delta: number, _ctx: SceneContext) {
+    this.elapsedTime += delta;
+
+    // NPC idle animations
+    for (const npc of this.npcs) {
+      const phase = npc.userData.idlePhase || 0;
+      const t = this.elapsedTime + phase;
+
+      // Subtle head bob
+      npc.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.geometry instanceof THREE.BoxGeometry) {
+          // Head is the box at ~1.58 Y (local)
+          if (Math.abs(child.position.y - 1.58) < 0.05) {
+            child.rotation.y = Math.sin(t * 0.5) * 0.08;
+            child.rotation.x = Math.sin(t * 0.3) * 0.03;
+          }
+        }
+      });
+    }
+
+    // Fluorescent light flicker
+    for (let i = 0; i < this.fluorLights.length; i++) {
+      this.flickerTimers[i] += delta;
+      const light = this.fluorLights[i];
+      // Occasional subtle flicker
+      if (Math.sin(this.flickerTimers[i] * 15 + i * 7) > 0.97) {
+        light.intensity = 0.3 + Math.random() * 0.5;
+      } else {
+        light.intensity = 0.8;
+      }
+    }
+
+    // Dust particle drift
+    if (this.dustParticles) {
+      const positions = this.dustParticles.geometry.attributes.position;
+      for (let i = 0; i < positions.count; i++) {
+        let y = positions.getY(i);
+        y += delta * 0.05 * Math.sin(this.elapsedTime + i);
+        const x = positions.getX(i) + delta * 0.02 * Math.sin(this.elapsedTime * 0.3 + i * 0.5);
+        if (y > 3) y = 0;
+        if (y < 0) y = 3;
+        positions.setY(i, y);
+        positions.setX(i, x);
+      }
+      positions.needsUpdate = true;
+    }
+  }
+
+  cleanup() {
+    this.npcs = [];
+    this.fluorLights = [];
+    this.flickerTimers = [];
+    this.dustParticles = null;
+  }
 }

@@ -7,8 +7,11 @@ import {
 
 export class LobbyScene implements GameScene {
   name = 'lobby';
+  private dustParticles: THREE.Points | null = null;
+  private elapsedTime = 0;
 
   setup(ctx: SceneContext) {
+    this.elapsedTime = 0;
     addLighting(ctx.scene);
     ctx.scene.background = new THREE.Color(0x1a1e24);
 
@@ -383,6 +386,27 @@ export class LobbyScene implements GameScene {
     // --- FLOOR DETAIL: Reception area rug/mat ---
     ctx.scene.add(createBox(8, 0.02, 4, 0x1a1520, [0, 0.01, -7]));
 
+    // Floating dust motes in atrium light
+    {
+      const count = 80;
+      const positions = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 18;
+        positions[i * 3 + 1] = Math.random() * 7;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 22;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const mat = new THREE.PointsMaterial({
+        color: 0xeeddbb,
+        size: 0.025,
+        transparent: true,
+        opacity: 0.3,
+      });
+      this.dustParticles = new THREE.Points(geo, mat);
+      ctx.scene.add(this.dustParticles);
+    }
+
     // Player start (centered at doors)
     ctx.player.camera.position.set(0, 1.7, 8);
     ctx.player.enable();
@@ -427,6 +451,23 @@ export class LobbyScene implements GameScene {
       new THREE.Box3(new THREE.Vector3(-9.3, 0, -5.3), new THREE.Vector3(-8.7, 1.5, -4.7)),
     ]);
   }
-  update() {}
-  cleanup() {}
+  update(delta: number) {
+    this.elapsedTime += delta;
+    if (this.dustParticles) {
+      const positions = this.dustParticles.geometry.attributes.position;
+      for (let i = 0; i < positions.count; i++) {
+        let y = positions.getY(i);
+        y += delta * 0.08 * Math.sin(this.elapsedTime * 0.5 + i);
+        const x = positions.getX(i) + delta * 0.015 * Math.cos(this.elapsedTime * 0.2 + i * 0.3);
+        if (y > 7) y = 0.5;
+        if (y < 0) y = 7;
+        positions.setY(i, y);
+        positions.setX(i, x);
+      }
+      positions.needsUpdate = true;
+    }
+  }
+  cleanup() {
+    this.dustParticles = null;
+  }
 }

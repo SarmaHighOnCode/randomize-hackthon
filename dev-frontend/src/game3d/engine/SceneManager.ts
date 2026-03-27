@@ -78,13 +78,35 @@ export class SceneManager {
     this.currentScene = next;
     next.setup(this.ctx);
 
+    // Show location title card
+    const titles: Record<string, string> = {
+      street: 'ACT I — THE STREET',
+      lobby: 'ACT II — THE LOBBY',
+      interview: 'ACT III — THE INTERVIEW',
+      office: 'ACT IV — THE OFFICE',
+      desk: 'ACT V — THE DESK',
+    };
+    const title = titles[sceneName];
+    if (title) this.ctx.showNarrator(title);
+
     // Fade in
     await this.animateFade(1, 0, 0.6);
+
+    // Hold title then hide
+    if (title) {
+      await this.delay(1800);
+      this.ctx.hideNarrator();
+    }
+
     this.transitioning = false;
   }
 
   update(delta: number) {
     this.currentScene?.update(delta, this.ctx);
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private animateFade(from: number, to: number, duration: number): Promise<void> {
