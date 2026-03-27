@@ -101,33 +101,219 @@ export function createChair(x: number, z: number, rotY = 0): THREE.Group {
   return group;
 }
 
+// Skin tone palette for variety
+const SKIN_TONES = [0xf5d0a9, 0xd4a574, 0xc68642, 0x8d5524, 0xffdbac, 0xe0ac69];
+const HAIR_COLORS = [0x2a1a0a, 0x4a3020, 0x8a6a4a, 0x1a1a2a, 0x6a3a2a, 0xc0a080];
+
+export interface NPCOptions {
+  bodyColor?: number;
+  label?: string;
+  skinTone?: number;
+  hairColor?: number;
+  hairStyle?: 'flat' | 'tall' | 'side' | 'bald';
+  hasGlasses?: boolean;
+  hasTie?: boolean;
+  tieColor?: number;
+  facing?: number; // rotation Y
+}
+
 export function createNPC(
   x: number, z: number,
-  bodyColor = 0x4a5a6a,
+  bodyColorOrOpts: number | NPCOptions = 0x4a5a6a,
   label?: string
 ): THREE.Group {
+  // Support old call signature: createNPC(x, z, color, label)
+  let opts: NPCOptions;
+  if (typeof bodyColorOrOpts === 'number') {
+    opts = { bodyColor: bodyColorOrOpts, label };
+  } else {
+    opts = bodyColorOrOpts;
+  }
+
+  const bodyColor = opts.bodyColor ?? 0x4a5a6a;
+  const skinTone = opts.skinTone ?? SKIN_TONES[Math.floor(Math.random() * SKIN_TONES.length)];
+  const hairColor = opts.hairColor ?? HAIR_COLORS[Math.floor(Math.random() * HAIR_COLORS.length)];
+  const hairStyle = opts.hairStyle ?? (['flat', 'tall', 'side', 'bald'] as const)[Math.floor(Math.random() * 4)];
+  const hasGlasses = opts.hasGlasses ?? (Math.random() > 0.6);
+  const hasTie = opts.hasTie ?? (Math.random() > 0.5);
+  const tieColor = opts.tieColor ?? [0xaa2222, 0x2244aa, 0x228844, 0x886622][Math.floor(Math.random() * 4)];
+
   const group = new THREE.Group();
   group.position.set(x, 0, z);
+  if (opts.facing) group.rotation.y = opts.facing;
 
-  // Body (capsule approximation)
-  const body = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.2, 0.2, 0.8, 6),
-    new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.8 })
+  const skinMat = new THREE.MeshStandardMaterial({ color: skinTone, roughness: 0.7 });
+  const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.8 });
+
+  // --- Torso (tapered cylinder for slight shoulder width) ---
+  const torso = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.17, 0.22, 0.65, 8),
+    bodyMat
   );
-  body.position.y = 1.0;
-  group.add(body);
+  torso.position.y = 1.0;
+  group.add(torso);
 
-  // Head
+  // --- Shoulders (wider top) ---
+  const shoulders = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.08, 0.22),
+    bodyMat
+  );
+  shoulders.position.y = 1.35;
+  group.add(shoulders);
+
+  // --- Arms ---
+  for (const side of [-1, 1]) {
+    // Upper arm
+    const upperArm = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.055, 0.35, 6),
+      bodyMat
+    );
+    upperArm.position.set(side * 0.3, 1.15, 0);
+    upperArm.rotation.z = side * 0.15; // slight outward angle
+    group.add(upperArm);
+
+    // Forearm (sleeve rolled up — skin visible)
+    const forearm = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.05, 0.045, 0.25, 6),
+      skinMat
+    );
+    forearm.position.set(side * 0.32, 0.9, 0.05);
+    forearm.rotation.z = side * 0.1;
+    forearm.rotation.x = -0.3; // slightly forward as if resting on table
+    group.add(forearm);
+
+    // Hand
+    const hand = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, 0.04, 0.06),
+      skinMat
+    );
+    hand.position.set(side * 0.33, 0.77, 0.1);
+    group.add(hand);
+  }
+
+  // --- Neck ---
+  const neck = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.06, 0.07, 0.1, 6),
+    skinMat
+  );
+  neck.position.y = 1.42;
+  group.add(neck);
+
+  // --- Head ---
   const head = new THREE.Mesh(
-    new THREE.BoxGeometry(0.25, 0.25, 0.25),
-    new THREE.MeshStandardMaterial({ color: 0xd4a574, roughness: 0.7 })
+    new THREE.BoxGeometry(0.24, 0.26, 0.24),
+    skinMat
   );
-  head.position.y = 1.55;
+  head.position.y = 1.58;
   group.add(head);
 
-  if (label) {
-    group.userData.npcLabel = label;
+  // --- Eyes ---
+  for (const side of [-1, 1]) {
+    const eye = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.03, 0.02),
+      new THREE.MeshStandardMaterial({ color: 0xffffff })
+    );
+    eye.position.set(side * 0.06, 1.6, 0.12);
+    group.add(eye);
+
+    // Pupil
+    const pupil = new THREE.Mesh(
+      new THREE.BoxGeometry(0.02, 0.025, 0.02),
+      new THREE.MeshStandardMaterial({ color: 0x1a1a2a })
+    );
+    pupil.position.set(side * 0.06, 1.6, 0.13);
+    group.add(pupil);
   }
+
+  // --- Mouth (simple line) ---
+  const mouth = new THREE.Mesh(
+    new THREE.BoxGeometry(0.08, 0.015, 0.02),
+    new THREE.MeshStandardMaterial({ color: 0x9a6a5a })
+  );
+  mouth.position.set(0, 1.5, 0.12);
+  group.add(mouth);
+
+  // --- Hair ---
+  const hairMat = new THREE.MeshStandardMaterial({ color: hairColor, roughness: 0.9 });
+  if (hairStyle === 'flat') {
+    const hair = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.06, 0.26), hairMat);
+    hair.position.y = 1.74;
+    group.add(hair);
+    // Side burns
+    for (const s of [-1, 1]) {
+      const sideburn = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.26), hairMat);
+      sideburn.position.set(s * 0.14, 1.67, 0);
+      group.add(sideburn);
+    }
+  } else if (hairStyle === 'tall') {
+    const hair = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.14, 0.26), hairMat);
+    hair.position.y = 1.78;
+    group.add(hair);
+  } else if (hairStyle === 'side') {
+    const hair = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.06, 0.26), hairMat);
+    hair.position.set(0.03, 1.74, 0);
+    group.add(hair);
+    // Side sweep
+    const sweep = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.1, 0.26), hairMat);
+    sweep.position.set(-0.12, 1.7, 0);
+    group.add(sweep);
+  }
+  // 'bald' gets no hair
+
+  // --- Glasses (if applicable) ---
+  if (hasGlasses) {
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+    // Frames
+    for (const side of [-1, 1]) {
+      const frame = new THREE.Mesh(new THREE.RingGeometry(0.03, 0.04, 4), glassMat);
+      frame.position.set(side * 0.06, 1.6, 0.135);
+      group.add(frame);
+    }
+    // Bridge
+    const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.01, 0.01), glassMat);
+    bridge.position.set(0, 1.6, 0.135);
+    group.add(bridge);
+    // Lens tint
+    for (const side of [-1, 1]) {
+      const lens = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.05, 0.05),
+        new THREE.MeshStandardMaterial({ color: 0x8888ff, transparent: true, opacity: 0.15 })
+      );
+      lens.position.set(side * 0.06, 1.6, 0.134);
+      group.add(lens);
+    }
+  }
+
+  // --- Tie (if applicable) ---
+  if (hasTie) {
+    const tieMat = new THREE.MeshStandardMaterial({ color: tieColor, roughness: 0.6 });
+    // Knot
+    const knot = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, 0.04), tieMat);
+    knot.position.set(0, 1.3, 0.18);
+    group.add(knot);
+    // Body of tie
+    const tieBody = new THREE.Mesh(
+      new THREE.BoxGeometry(0.035, 0.3, 0.02),
+      tieMat
+    );
+    tieBody.position.set(0, 1.1, 0.19);
+    group.add(tieBody);
+    // Tip (wider at end)
+    const tieTip = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.04, 0.02),
+      tieMat
+    );
+    tieTip.position.set(0, 0.94, 0.19);
+    group.add(tieTip);
+  }
+
+  if (opts.label) {
+    group.userData.npcLabel = opts.label;
+  }
+
+  // Mark group for idle animation
+  group.userData.isNPC = true;
+  group.userData.idlePhase = Math.random() * Math.PI * 2; // random start phase
 
   return group;
 }

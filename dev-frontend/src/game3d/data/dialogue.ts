@@ -15,19 +15,30 @@ export const DIALOGUE: Record<string, DialogueSequence> = {
   interviewer: {
     npcName: 'INTERVIEWER',
     lines: [
-      { text: 'So... tell me about yourself.', delay: 0 },
+      { text: '*shuffles papers*', delay: 800 },
+      { text: '*glances at laptop screen*', delay: 600 },
+      { text: 'So...', delay: 500 },
+      { text: '...tell me about yourself.', delay: 0 },
     ],
   },
   interviewResult: {
     npcName: 'INTERVIEWER',
     lines: [
-      { text: 'Perfect. You start Monday.', delay: 0 },
+      { text: '*scribbles notes furiously*', delay: 800 },
+      { text: 'Interesting. Very interesting.', delay: 600 },
+      { text: '*whispers something to colleague*', delay: 700 },
+      { text: 'Well...', delay: 500 },
+      { text: "You start Monday.", delay: 0 },
     ],
   },
   interviewer2: {
     npcName: 'INTERVIEWER 2',
     lines: [
-      { text: "Welcome to Nexus. You'll love it here.", delay: 0 },
+      { text: '*leans forward*', delay: 500 },
+      { text: "Welcome to Nexus Corp.", delay: 0 },
+      { text: "You'll love it here.", delay: 600 },
+      { text: "Everyone does.", delay: 800 },
+      { text: "*smiles in a way that doesn't reach their eyes*", delay: 0 },
     ],
   },
   coworkerPrinter: {
