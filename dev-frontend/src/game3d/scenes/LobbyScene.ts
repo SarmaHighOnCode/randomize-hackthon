@@ -10,60 +10,204 @@ export class LobbyScene implements GameScene {
 
   setup(ctx: SceneContext) {
     addLighting(ctx.scene);
-    ctx.scene.background = new THREE.Color(0x3a4a5a);
+    ctx.scene.background = new THREE.Color(0x1a1e24);
 
     // Floor — polished dark marble with high specular
-    const floorGeo = new THREE.PlaneGeometry(24, 24);
+    const floorGeo = new THREE.PlaneGeometry(26, 26);
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0x111215, // Very dark slate/black
-      roughness: 0.1,  // Very smooth
-      metalness: 0.8,  // Highly reflective
+      color: 0x111215,
+      roughness: 0.1,
+      metalness: 0.8,
     });
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.rotation.x = -Math.PI / 2;
     ctx.scene.add(floor);
 
-    // Massive Atrium Ceiling
-    ctx.scene.add(createCeiling(24, 24, 8.0, 0xefefef)); // Off-white modern ceiling
+    // Massive Atrium Ceiling (slightly oversized to prevent edge gaps)
+    ctx.scene.add(createCeiling(26, 26, 8.0, 0xd8d8d8));
 
-    // --- ARCHITECTURE ---
-    
-    const wallColor = 0xc0c4c8; // Clinical corporate off-white
+    // --- CEILING DETAIL: Fluorescent light strips ---
+    for (let lz = -9; lz <= 9; lz += 6) {
+      // Light fixture box (recessed panel look)
+      const fixtureGeo = new THREE.BoxGeometry(1.2, 0.06, 0.2);
+      const fixtureMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0xeeeeff,
+        emissiveIntensity: 1.5,
+      });
+      const fixture = new THREE.Mesh(fixtureGeo, fixtureMat);
+      fixture.position.set(-4, 7.96, lz);
+      ctx.scene.add(fixture);
 
-    // Back wall (The focal point)
-    const backWall = createWall(24, 8.0, 0x22252a); // Accent dark wall behind reception
+      const fixture2 = fixture.clone();
+      fixture2.position.set(4, 7.96, lz);
+      ctx.scene.add(fixture2);
+
+      // Subtle point lights under each fixture
+      const pLight = new THREE.PointLight(0xeeeeff, 0.4, 8);
+      pLight.position.set(-4, 7.5, lz);
+      ctx.scene.add(pLight);
+
+      const pLight2 = new THREE.PointLight(0xeeeeff, 0.4, 8);
+      pLight2.position.set(4, 7.5, lz);
+      ctx.scene.add(pLight2);
+    }
+
+    // --- ARCHITECTURE: SOLID ENCLOSURE ---
+
+    const wallColor = 0xc0c4c8;
+    const trimColor = 0x9a9ea2;
+
+    // ======= BACK WALL (Focal point behind reception) =======
+    const backWall = createWall(24, 8.0, 0x22252a);
     backWall.position.z = -12;
     ctx.scene.add(backWall);
 
-    // Left wall with elevator bank
+    // ======= FRONT WALL (entrance side, with door opening) =======
+    // Left portion of front wall
+    const frontWallLeft = createBox(7, 8, 0.15, wallColor, [-6.5, 4, 12]);
+    ctx.scene.add(frontWallLeft);
+    // Right portion of front wall
+    const frontWallRight = createBox(7, 8, 0.15, wallColor, [6.5, 4, 12]);
+    ctx.scene.add(frontWallRight);
+    // Top portion above door
+    const frontWallTop = createBox(10, 4.5, 0.15, wallColor, [0, 5.75, 12]);
+    ctx.scene.add(frontWallTop);
+    // Glass entrance doors (transparent)
+    const entranceDoor = createBox(3.5, 3.2, 0.08, 0x88aabb, [0, 1.6, 12]);
+    const entranceDoorMat = entranceDoor.material as THREE.MeshStandardMaterial;
+    entranceDoorMat.transparent = true;
+    entranceDoorMat.opacity = 0.15;
+    entranceDoorMat.metalness = 0.9;
+    ctx.scene.add(entranceDoor);
+    // Door frame
+    ctx.scene.add(createBox(3.7, 3.4, 0.12, 0x333333, [0, 1.7, 12]));
+    ctx.scene.add(createBox(0.1, 3.2, 0.12, 0x333333, [0, 1.6, 12])); // center divider
+
+    // ======= LEFT WALL (solid, with elevator bank) =======
     const leftWall = createWall(24, 8.0, wallColor);
     leftWall.position.x = -10;
     leftWall.rotation.y = Math.PI / 2;
     leftWall.position.z = 0;
     ctx.scene.add(leftWall);
 
-    // Right wall (Glass windows overlooking the street)
-    // Create a base wall
-    const rightWallBottom = createWall(24, 1.0, wallColor);
-    rightWallBottom.position.x = 10;
-    rightWallBottom.rotation.y = Math.PI / 2;
+    // Left wall baseboard trim
+    ctx.scene.add(createBox(0.15, 0.3, 24, trimColor, [-9.85, 0.15, 0]));
+
+    // Left wall crown molding
+    ctx.scene.add(createBox(0.3, 0.2, 24, trimColor, [-9.8, 7.9, 0]));
+
+    // ======= RIGHT WALL (Glass curtain wall with proper framing) =======
+    // Solid base (0 to 1m)
+    const rightWallBottom = createBox(0.15, 1.0, 24, wallColor, [10, 0.5, 0]);
     ctx.scene.add(rightWallBottom);
-    
-    const rightWallTop = createWall(24, 3.0, wallColor);
-    rightWallTop.position.x = 10;
-    rightWallTop.rotation.y = Math.PI / 2;
-    rightWallTop.position.y = 6.5; // Starts at y=5, up to 8
+
+    // Solid header band (6.5 to 8m)
+    const rightWallTop = createBox(0.15, 1.5, 24, wallColor, [10, 7.25, 0]);
     ctx.scene.add(rightWallTop);
-    
+
+    // Horizontal spandrel at mid-height for structural feel
+    ctx.scene.add(createBox(0.15, 0.3, 24, 0x444444, [10, 3.75, 0]));
+
+    // Vertical mullions (full height, creating the window grid)
     for (let i = -10; i <= 10; i += 4) {
-        // Vertical mullions for huge windows
-        ctx.scene.add(createBox(0.4, 8, 0.4, 0x333333, [9.8, 4, i]));
+      ctx.scene.add(createBox(0.4, 8, 0.4, 0x333333, [9.8, 4, i]));
     }
+
+    // Glass panes filling the window openings
+    for (let i = -10; i <= 10; i += 4) {
+      // Lower window pane (1m to 3.6m)
+      const lowerGlass = createBox(0.05, 2.5, 3.6, 0x334455, [10, 2.25, i + 0.2]);
+      const lgMat = lowerGlass.material as THREE.MeshStandardMaterial;
+      lgMat.transparent = true;
+      lgMat.opacity = 0.15;
+      lgMat.metalness = 0.9;
+      lgMat.roughness = 0.05;
+      ctx.scene.add(lowerGlass);
+
+      // Upper window pane (3.9m to 6.4m)
+      const upperGlass = createBox(0.05, 2.5, 3.6, 0x334455, [10, 5.15, i + 0.2]);
+      const ugMat = upperGlass.material as THREE.MeshStandardMaterial;
+      ugMat.transparent = true;
+      ugMat.opacity = 0.15;
+      ugMat.metalness = 0.9;
+      ugMat.roughness = 0.05;
+      ctx.scene.add(upperGlass);
+    }
+
+    // Right wall baseboard trim  
+    ctx.scene.add(createBox(0.15, 0.3, 24, trimColor, [9.85, 0.15, 0]));
+
+    // Right wall crown molding
+    ctx.scene.add(createBox(0.3, 0.2, 24, trimColor, [9.8, 7.9, 0]));
+
+    // Back wall baseboard
+    ctx.scene.add(createBox(24, 0.3, 0.15, trimColor, [0, 0.15, -11.85]));
+
+    // Back wall crown molding
+    ctx.scene.add(createBox(24, 0.2, 0.3, trimColor, [0, 7.9, -11.8]));
+
+    // ======= EXTERIOR BUILDINGS (visible through right-side windows) =======
+    // These sit outside the right wall, giving the sense of a cityscape
+
+    // Nearby building (close, tall)
+    const extBldg1 = createBox(8, 30, 6, 0x2a2d32, [18, 15, -4]);
+    ctx.scene.add(extBldg1);
+    // Window grid on nearby building
+    for (let wy = 2; wy < 28; wy += 3) {
+      for (let wz = -6; wz <= -2; wz += 2) {
+        const extWin = createBox(0.1, 2.0, 1.2, 0x0a0f15, [13.96, wy, wz]);
+        const extWinMat = extWin.material as THREE.MeshStandardMaterial;
+        if (Math.random() > 0.5) {
+          extWinMat.emissive = new THREE.Color(0x998866);
+          extWinMat.emissiveIntensity = 0.3;
+        }
+        ctx.scene.add(extWin);
+      }
+    }
+
+    // Mid-distance building
+    const extBldg2 = createBox(10, 22, 8, 0x353840, [22, 11, 4]);
+    ctx.scene.add(extBldg2);
+
+    // Far building (shorter)
+    const extBldg3 = createBox(6, 15, 5, 0x3a3d42, [16, 7.5, 8]);
+    ctx.scene.add(extBldg3);
+    
+    // Tall skinny tower in the distance 
+    const extBldg4 = createBox(4, 40, 4, 0x25282d, [25, 20, -8]);
+    ctx.scene.add(extBldg4);
+
+    // Another mid-range building
+    const extBldg5 = createBox(7, 18, 6, 0x2e3136, [20, 9, -10]);
+    ctx.scene.add(extBldg5);
+
+    // ======= EXTERIOR BUILDINGS (visible behind - through any gaps above back wall) =======
+    ctx.scene.add(createBox(30, 35, 5, 0x1e2126, [0, 17.5, -18]));
+    ctx.scene.add(createBox(20, 25, 4, 0x252830, [-8, 12.5, -16]));
+
+    // ======= CORNER SEAM COVERS (hide any gaps at wall intersections) =======
+    // Back-left corner
+    ctx.scene.add(createBox(0.5, 8, 0.5, 0x22252a, [-10, 4, -12]));
+    // Back-right corner
+    ctx.scene.add(createBox(0.5, 8, 0.5, 0x22252a, [10, 4, -12]));
+    // Front-left corner
+    ctx.scene.add(createBox(0.5, 8, 0.5, wallColor, [-10, 4, 12]));
+    // Front-right corner
+    ctx.scene.add(createBox(0.5, 8, 0.5, wallColor, [10, 4, 12]));
 
     // Monolithic Corporate Pillars
     for (const pz of [-8, -2, 4, 10]) {
       ctx.scene.add(createBox(1.5, 8, 1.5, 0x4a4d52, [-6, 4, pz]));
       ctx.scene.add(createBox(1.5, 8, 1.5, 0x4a4d52, [6, 4, pz]));
+
+      // Capital detail at top of each pillar
+      ctx.scene.add(createBox(1.7, 0.15, 1.7, 0x555860, [-6, 7.92, pz]));
+      ctx.scene.add(createBox(1.7, 0.15, 1.7, 0x555860, [6, 7.92, pz]));
+
+      // Base detail at bottom of each pillar
+      ctx.scene.add(createBox(1.7, 0.15, 1.7, 0x3a3d42, [-6, 0.08, pz]));
+      ctx.scene.add(createBox(1.7, 0.15, 1.7, 0x3a3d42, [6, 0.08, pz]));
     }
 
     // --- RECEPTION AREA ---
@@ -97,6 +241,13 @@ export class LobbyScene implements GameScene {
     logoMat.emissiveIntensity = 1.0;
     ctx.scene.add(logoInner);
 
+    // Spotlight on logo
+    const logoSpot = new THREE.SpotLight(0x4488ff, 15, 10, Math.PI / 5, 0.6, 1);
+    logoSpot.position.set(0, 7.5, -9);
+    logoSpot.target.position.set(0, 4.5, -11.85);
+    ctx.scene.add(logoSpot);
+    ctx.scene.add(logoSpot.target);
+
     const corpText = createTextSign('N E X U S   C O R P', 7.0, 1.0, '#ffffff', '#22252a', 48);
     corpText.position.set(0, 1.5, -11.8);
     ctx.scene.add(corpText);
@@ -106,7 +257,6 @@ export class LobbyScene implements GameScene {
     ctx.scene.add(receptionist);
 
     // Add seating area in the massive atrium
-    // A symmetrical arrangement of high-end corporate couches
     const createCouch = (x: number, z: number, rotationY: number) => {
       const group = new THREE.Group();
       
@@ -156,9 +306,9 @@ export class LobbyScene implements GameScene {
     };
 
     ctx.scene.add(createLuxPlant(-8, -10)); // Left corner plant
+    ctx.scene.add(createLuxPlant(8, 10));   // Right corner plant (symmetry)
     
     // --- ELEVATOR BANK (Right corner) ---
-    // The actual elevator doors
     const elevatorDoors = createBox(3.0, 3.2, 0.1, 0x8899aa, [7, 1.6, -11.9]);
     const elevatorMat = elevatorDoors.material as THREE.MeshStandardMaterial;
     elevatorMat.metalness = 0.9;
@@ -171,7 +321,7 @@ export class LobbyScene implements GameScene {
     ctx.scene.add(createBox(3.4, 3.4, 0.2, 0x222222, [7, 1.7, -11.95]));
 
     // Glowing directional sign above elevator
-    const elevatorSign = createTextSign('INTERVIEWS \u2193', 3.0, 0.6, '#111111', '#ffaa00', 32);
+    const elevatorSign = createTextSign('INTERVIEWS ↓', 3.0, 0.6, '#111111', '#ffaa00', 32);
     elevatorSign.position.set(7, 4.2, -11.9);
     const signMat = elevatorSign.material as THREE.MeshStandardMaterial;
     signMat.emissive = new THREE.Color(0xffaa00);
@@ -189,16 +339,47 @@ export class LobbyScene implements GameScene {
     ctx.scene.add(createBox(3.4, 0.05, 2.4, 0x551111, [7, 0.03, -10.6]));
 
     // Freestanding sign post near entrance
-    const guideSign = createTextSign('CONFERENCE ROOMS\nElevator Bank East \u2192', 2.2, 1.0, '#1a2a3a', '#e0e0e0', 24);
+    const guideSign = createTextSign('CONFERENCE ROOMS\nElevator Bank East →', 2.2, 1.0, '#1a2a3a', '#e0e0e0', 24);
     guideSign.position.set(2, 1.6, 1);
-    guideSign.rotation.y = -Math.PI / 6; // Angled to face player walking in
+    guideSign.rotation.y = -Math.PI / 6;
     const guideMat = guideSign.material as THREE.MeshStandardMaterial;
     guideMat.emissive = new THREE.Color(0xaabbcc);
-    guideMat.emissiveIntensity = 0.2; // Add a slight glow so it's readable
+    guideMat.emissiveIntensity = 0.2;
     ctx.scene.add(guideSign);
     // Post
     ctx.scene.add(createBox(0.1, 1.6, 0.1, 0x333333, [2, 0.8, 0.95]));
     ctx.scene.add(createBox(0.8, 0.1, 0.8, 0x222222, [2, 0.05, 0.95])); // Base
+
+    // --- CORE VALUES TV (Left wall) ---
+    const tvScreen = createBox(2.0, 1.2, 0.05, 0x000000, [-9.85, 3.5, 5]);
+    ctx.scene.add(tvScreen);
+    // TV frame
+    ctx.scene.add(createBox(2.2, 1.4, 0.08, 0x222222, [-9.85, 3.5, 5]));
+    // TV content (emissive text sign)
+    const tvContent = createTextSign('INNOVATION\nINTEGRITY\nIMPACT', 1.8, 1.0, '#0a0a1a', '#4488cc', 28);
+    tvContent.position.set(-9.82, 3.5, 5);
+    const tvMat = tvContent.material as THREE.MeshStandardMaterial;
+    tvMat.emissive = new THREE.Color(0x2244aa);
+    tvMat.emissiveIntensity = 0.6;
+    ctx.scene.add(tvContent);
+
+    // --- WATER COOLER (Left wall, near back) ---
+    // Main body
+    ctx.scene.add(createBox(0.4, 1.0, 0.3, 0xcccccc, [-9, 0.5, -5]));
+    // Water jug (on top)
+    const jug = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.12, 0.15, 0.4, 8),
+      new THREE.MeshStandardMaterial({ color: 0x88bbdd, transparent: true, opacity: 0.3 })
+    );
+    jug.position.set(-9, 1.2, -5);
+    ctx.scene.add(jug);
+    // Sign: "Out of Water" 
+    const waterSign = createTextSign('OUT OF\nWATER', 0.5, 0.3, '#ffffff', '#cc3333', 16);
+    waterSign.position.set(-9, 0.7, -4.83);
+    ctx.scene.add(waterSign);
+
+    // --- FLOOR DETAIL: Reception area rug/mat ---
+    ctx.scene.add(createBox(8, 0.02, 4, 0x1a1520, [0, 0.01, -7]));
 
     // Player start (centered at doors)
     ctx.player.camera.position.set(0, 1.7, 8);
@@ -226,22 +407,24 @@ export class LobbyScene implements GameScene {
     ctx.player.setColliders([
       // Outer Walls
       new THREE.Box3(new THREE.Vector3(-10.5, 0, -12.5), new THREE.Vector3(10.5, 10, -11.5)), // Back Wall
-      new THREE.Box3(new THREE.Vector3(-10.5, 0, -12.5), new THREE.Vector3(-9.5, 10, 10)),   // Left Wall
-      new THREE.Box3(new THREE.Vector3(9.5, 0, -12.5), new THREE.Vector3(10.5, 10, 10)),     // Right Wall
-      new THREE.Box3(new THREE.Vector3(-10.5, 0, 9.5), new THREE.Vector3(10.5, 10, 10.5)),   // Front Wall
+      new THREE.Box3(new THREE.Vector3(-10.5, 0, -12.5), new THREE.Vector3(-9.5, 10, 13)),   // Left Wall
+      new THREE.Box3(new THREE.Vector3(9.5, 0, -12.5), new THREE.Vector3(10.5, 10, 13)),     // Right Wall
+      new THREE.Box3(new THREE.Vector3(-10.5, 0, 11.5), new THREE.Vector3(10.5, 10, 13)),    // Front Wall
       
       // Reception Desk
       new THREE.Box3(new THREE.Vector3(-3.5, 0, -9.5), new THREE.Vector3(3.5, 1.2, -7.5)),
       
       // Elevators section
-      new THREE.Box3(new THREE.Vector3(4.5, 0, -12.5), new THREE.Vector3(5.5, 10, -11)), // Pillar L
-      new THREE.Box3(new THREE.Vector3(8.5, 0, -12.5), new THREE.Vector3(9.5, 10, -11)), // Pillar R
+      new THREE.Box3(new THREE.Vector3(4.5, 0, -12.5), new THREE.Vector3(5.5, 10, -11)),
+      new THREE.Box3(new THREE.Vector3(8.5, 0, -12.5), new THREE.Vector3(9.5, 10, -11)),
       
       // Big Coffee Table
       new THREE.Box3(new THREE.Vector3(-1.0, 0, 0.4), new THREE.Vector3(1.0, 0.4, 1.6)),
+
+      // Water cooler
+      new THREE.Box3(new THREE.Vector3(-9.3, 0, -5.3), new THREE.Vector3(-8.7, 1.5, -4.7)),
     ]);
   }
   update() {}
   cleanup() {}
 }
-
