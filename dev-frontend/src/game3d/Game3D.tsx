@@ -68,7 +68,8 @@ export default function Game3D() {
     composer.addPass(bloomPass);
 
     // BACK TO RETRO! Crunch it up.
-      const pixelPass = new PixelationPass(2.0); // Tighter pixel resolution so text remains readable from far away     
+    const pixelPass = new PixelationPass(2.0);
+    pixelPass.renderToScreen = true;
     composer.addPass(pixelPass);
 
     // Player

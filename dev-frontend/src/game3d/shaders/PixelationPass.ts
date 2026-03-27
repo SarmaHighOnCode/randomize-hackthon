@@ -55,6 +55,8 @@ const PixelationShader = {
       // Soft CRT Vignette overlay
       float vignette = distance(vUv, vec2(0.5));
       color.rgb *= smoothstep(1.0, 0.35, vignette * vignette * 0.6 + 0.1);
+
+      gl_FragColor = color;
     }
   `,
 };
