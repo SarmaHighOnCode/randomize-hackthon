@@ -14,6 +14,7 @@ import { LobbyScene } from './scenes/LobbyScene';
 import { InterviewScene } from './scenes/InterviewScene';
 import { OfficeScene } from './scenes/OfficeScene';
 import { DeskScene } from './scenes/DeskScene';
+import { AudioSystem } from './engine/AudioSystem';
 import { DIALOGUE } from './data/dialogue';
 
 export default function Game3D() {
@@ -37,6 +38,7 @@ export default function Game3D() {
   const sceneManagerRef = useRef<SceneManager | null>(null);
   const playerControllerRef = useRef<PlayerController | null>(null);
   const interviewSceneRef = useRef<InterviewScene | null>(null);
+  const audioRef = useRef<AudioSystem | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -73,6 +75,11 @@ export default function Game3D() {
     const player = new PlayerController(camera, canvas);
     playerControllerRef.current = player;
 
+    // Audio
+    const audio = new AudioSystem();
+    audio.start();
+    audioRef.current = audio;
+
     // Dialogue
     const dialogue = new DialogueSystem(setDialogueState);
 
@@ -102,6 +109,7 @@ export default function Game3D() {
       hideChoice: () => setChoiceState(null),
       showNarrator: (text) => setNarratorText(text),
       hideNarrator: () => setNarratorText(null),
+      audio,
     };
 
     // Scene Manager
@@ -195,7 +203,11 @@ export default function Game3D() {
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Escape') {
-        setEscMenuOpen(prev => !prev);
+        setEscMenuOpen(prev => {
+          const next = !prev;
+          audioRef.current?.setMuted(next);
+          return next;
+        });
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -206,6 +218,7 @@ export default function Game3D() {
       window.removeEventListener('keydown', onKeyDown);
       renderer.dispose();
       composer.dispose();
+      audio.dispose();
     };
   }, []);
 

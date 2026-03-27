@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { PlayerController } from './PlayerController';
 import { DialogueSystem } from './DialogueSystem';
 import { TriggerManager } from './TriggerZone';
+import { AudioSystem } from './AudioSystem';
 
 export interface GameScene {
   name: string;
@@ -22,6 +23,7 @@ export interface SceneContext {
   hideChoice: () => void;
   showNarrator: (text: string) => void;
   hideNarrator: () => void;
+  audio: AudioSystem;
 }
 
 export class SceneManager {
@@ -77,6 +79,9 @@ export class SceneManager {
 
     this.currentScene = next;
     next.setup(this.ctx);
+
+    // Transition audio to new scene
+    this.ctx.audio.transitionTo(sceneName);
 
     // Show location title card
     const titles: Record<string, string> = {
