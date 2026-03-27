@@ -327,3 +327,87 @@
   font-size: 14px;
   color: #555;
 }
+
+/* Advanced Title Glitch */
+.game-title[data-glitch] {
+  position: relative;
+}
+
+.game-title[data-glitch]::before,
+.game-title[data-glitch]::after {
+  content: attr(data-glitch);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #12141a;
+}
+
+.game-title[data-glitch]::before {
+  left: 3px;
+  text-shadow: -2px 0 red;
+  animation: glitch-anim-1 2s infinite linear alternate-reverse;
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+}
+
+.game-title[data-glitch]::after {
+  left: -3px;
+  text-shadow: -2px 0 blue;
+  animation: glitch-anim-2 3s infinite linear alternate-reverse;
+  clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+}
+
+@keyframes glitch-anim-1 {
+  0% { transform: translate(0); }
+  2% { transform: translate(-3px, 1px); }
+  4% { transform: translate(3px, -1px); }
+  6% { transform: translate(0); }
+  100% { transform: translate(0); }
+}
+
+@keyframes glitch-anim-2 {
+  0% { transform: translate(0); }
+  3% { transform: translate(3px, -1px); }
+  6% { transform: translate(-3px, 1px); }
+  9% { transform: translate(0); }
+  100% { transform: translate(0); }
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 12px;
+  height: 1.2em;
+  background-color: #c8d8e4;
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+  margin-left: 8px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.start-btn {
+  text-transform: uppercase;
+  overflow: hidden;
+  position: relative;
+}
+
+.start-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  background: rgba(200, 216, 228, 0.1);
+  transform: translate(-50%, -50%) rotate(45deg) translateY(100%);
+  transition: transform 0.4s ease;
+}
+
+.start-btn:hover::before {
+  transform: translate(-50%, -50%) rotate(45deg) translateY(0);
+}
+
