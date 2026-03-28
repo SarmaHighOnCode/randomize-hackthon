@@ -123,12 +123,11 @@ export class DeskScene {
 
       if (this.bootProgress >= 1.0) {
         this.booting = false;
-        // Clear the 3D monitor to black — the HTML overlay takes over
-        this.ctx2d.fillStyle = '#000000';
-        this.ctx2d.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.screenTexture.needsUpdate = true;
-        // TRANSITION TO 2D WORKPLACE — keep 3D scene visible behind
-        useGameStore.getState().setGameState('2D_WORK');
+        // FINAL TRANSITION TO 2D WORKPLACE
+        ctx.setFade(1.0);
+        setTimeout(() => {
+          useGameStore.getState().setGameState('2D_WORK');
+        }, 1000);
       }
     }
   }

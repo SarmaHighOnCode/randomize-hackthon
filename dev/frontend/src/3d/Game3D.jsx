@@ -19,8 +19,6 @@ import { useGameStore } from '../store/useGameStore';
 
 export default function Game3D() {
   const canvasRef = useRef(null);
-  const gameState = useGameStore(s => s.gameState);
-  const is2D = gameState === '2D_WORK';
   const [fadeOpacity, setFadeOpacity] = useState(1);
   const [dialogueState, setDialogueState] = useState({
     active: false, npcName: '', text: '', canAdvance: false,
@@ -222,13 +220,13 @@ export default function Game3D() {
       {loading && <div className="fixed inset-0 flex items-center justify-center bg-black text-white font-mono z-[100]">LOADING...</div>}
       <div className="fixed inset-0 w-full h-full overflow-hidden" style={{ visibility: loading ? 'hidden' : 'visible' }}>
         <canvas ref={canvasRef} className="w-full h-full" />
-        {!is2D && <div className="fixed top-1/2 left-1/2 w-1 h-1 bg-white opacity-50 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" />}
+        <div className="fixed top-1/2 left-1/2 w-1 h-1 bg-white opacity-50 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
       {/* Fade overlay */}
-      {!is2D && <div className="fixed inset-0 bg-black pointer-events-none z-50 transition-opacity duration-300" style={{ opacity: fadeOpacity }} />}
+      <div className="fixed inset-0 bg-black pointer-events-none z-50 transition-opacity duration-300" style={{ opacity: fadeOpacity }} />
 
       {/* Dialogue */}
-      {!is2D && dialogueState.active && (
+      {dialogueState.active && (
         <div className="fixed bottom-12 left-1/2 -translate-x-1/2 w-[800px] bg-black/80 border-2 border-white p-6 font-mono text-white text-lg z-40">
           {dialogueState.npcName && (
             <div className="text-nexus-accent font-bold mb-2 uppercase">{dialogueState.npcName}</div>
@@ -241,14 +239,14 @@ export default function Game3D() {
       )}
 
       {/* Interact prompt */}
-      {!is2D && interactPrompt && !dialogueState.active && (
+      {interactPrompt && !dialogueState.active && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 translate-y-8 bg-black/50 px-4 py-2 border border-white/20 text-white font-mono z-30 uppercase tracking-widest text-sm">
           {interactPrompt}
         </div>
       )}
 
       {/* Interview choices */}
-      {!is2D && choiceState && (
+      {choiceState && (
         <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-black/40 z-[60]">
           {choiceState.options.map((opt, i) => (
             <button
@@ -263,14 +261,14 @@ export default function Game3D() {
       )}
 
       {/* Narrator text */}
-      {!is2D && narratorText && (
+      {narratorText && (
         <div className="fixed top-24 left-1/2 -translate-x-1/2 text-white font-mono text-center text-3xl tracking-tighter uppercase max-w-4xl leading-tight text-shadow-glow z-20">
             {narratorText}
         </div>
       )}
 
       {/* Pause / Esc Menu */}
-      {!is2D && escMenuOpen && (
+      {escMenuOpen && (
         <div className="fixed inset-0 flex flex-col items-center justify-center gap-2 bg-black/90 z-[200] font-mono">
           <div className="text-4xl font-black mb-8 tracking-tighter">PAUSED</div>
           <button className="bg-white text-black px-12 py-2 w-64 font-bold hover:bg-nexus-accent hover:text-black transition-all" onClick={() => {
