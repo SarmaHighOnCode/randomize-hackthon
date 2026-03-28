@@ -23,22 +23,44 @@ const DesktopIcon = ({ icon, label, onClick }) => (
 )
 
 // ─── Start Menu ──────────────────────────────────────────────────
-const StartMenu = ({ onClose, onOpenApp }) => (
-  <div className="nxos-start-menu" onClick={e => e.stopPropagation()}>
-    <div className="nxos-start-sidebar"><span className="nxos-start-sidebar-text">NexusOS 98</span></div>
-    <div className="nxos-start-items">
-      {[['jira','📋','ShadowJira™'],['email','📧','QuickOutlook™'],['browser','🌐','NexusNet Explorer'],['notepad','📝','Notepad.exe']].map(([id,ic,nm])=>(
-        <div key={id} className="nxos-start-item" onClick={()=>{onOpenApp(id);onClose()}}><span className="nxos-start-item-icon">{ic}</span> {nm}</div>
-      ))}
-      <div className="nxos-start-divider"/>
-      {[['mycomputer','💻','My Computer'],['documents','📁','My Documents']].map(([id,ic,nm])=>(
-        <div key={id} className="nxos-start-item" onClick={()=>{onOpenApp(id);onClose()}}><span className="nxos-start-item-icon">{ic}</span> {nm}</div>
-      ))}
-      <div className="nxos-start-divider"/>
-      <div className="nxos-start-item shutdown" onClick={()=>{useGameStore.getState().setGameState('START');useWorkStore.getState().reset();onClose()}}><span className="nxos-start-item-icon">🔌</span> Shut Down...</div>
+const GAME_MODES = [
+  { id: 'balanced', icon: '🎯', label: 'Balanced' },
+  { id: 'deadline_rush', icon: '⏱️', label: 'Deadline Rush' },
+  { id: 'meeting_hell', icon: '📅', label: 'Meeting Hell' },
+  { id: 'nightmare', icon: '💀', label: 'Nightmare' },
+]
+
+const StartMenu = ({ onClose, onOpenApp }) => {
+  const gameMode = useWorkStore(s => s.gameMode)
+  const setGameMode = useWorkStore(s => s.setGameMode)
+  return (
+    <div className="nxos-start-menu" onClick={e => e.stopPropagation()}>
+      <div className="nxos-start-sidebar"><span className="nxos-start-sidebar-text">NexusOS 98</span></div>
+      <div className="nxos-start-items">
+        {[['jira','📋','ShadowJira™'],['email','📧','QuickOutlook™'],['browser','🌐','NexusNet Explorer'],['notepad','📝','Notepad.exe']].map(([id,ic,nm])=>(
+          <div key={id} className="nxos-start-item" onClick={()=>{onOpenApp(id);onClose()}}><span className="nxos-start-item-icon">{ic}</span> {nm}</div>
+        ))}
+        <div className="nxos-start-divider"/>
+        {[['mycomputer','💻','My Computer'],['documents','📁','My Documents']].map(([id,ic,nm])=>(
+          <div key={id} className="nxos-start-item" onClick={()=>{onOpenApp(id);onClose()}}><span className="nxos-start-item-icon">{ic}</span> {nm}</div>
+        ))}
+        <div className="nxos-start-divider"/>
+        <div className="nxos-start-item" style={{cursor:'default',fontWeight:'bold',fontSize:'0.5rem',color:'#808080'}}>
+          <span className="nxos-start-item-icon">⚙️</span> Difficulty
+        </div>
+        {GAME_MODES.map(m => (
+          <div key={m.id} className={`nxos-start-item ${gameMode === m.id ? 'selected' : ''}`}
+            style={gameMode === m.id ? {background:'#000080',color:'#fff'} : {}}
+            onClick={() => { setGameMode(m.id); playBlip(); onClose() }}>
+            <span className="nxos-start-item-icon">{m.icon}</span> {m.label}
+          </div>
+        ))}
+        <div className="nxos-start-divider"/>
+        <div className="nxos-start-item shutdown" onClick={()=>{useGameStore.getState().setGameState('START');useWorkStore.getState().reset();onClose()}}><span className="nxos-start-item-icon">🔌</span> Shut Down...</div>
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 // ─── Win98 Window Chrome ─────────────────────────────────────────
 const Win98Window = ({ title, icon, children, onClose, onMinimize, isActive, zIndex, menuItems }) => (
@@ -457,7 +479,7 @@ const RecycleBinContent = () => <div className="nxos-recycle"><div className="nx
 const NotificationCenter = ({ onOpenApp, onClose }) => { const h=useWorkStore(s=>s.notificationHistory); const cl=useWorkStore(s=>s.clearHistory); const fmt=ts=>{const s=Math.floor((Date.now()-ts)/1000);return s<60?`${s}s ago`:`${Math.floor(s/60)}m ago`}; return <div className="nxos-notif-center" onClick={e=>e.stopPropagation()}><div className="nxos-notif-center-header"><span>🔔 Notifications</span><div className="nxos-notif-center-actions"><button className="nxos-btn" style={{height:'14px',fontSize:'0.45rem',padding:'0 4px'}} onClick={cl}>Clear</button><button className="nxos-btn" style={{height:'14px',fontSize:'0.45rem',padding:'0 4px'}} onClick={onClose}>✕</button></div></div><div className="nxos-notif-center-body">{h.length===0&&<div className="nxos-notif-center-empty">No notifications yet.</div>}{[...h].reverse().slice(0,30).map(n=><div key={n.id} className={`nxos-notif-center-item ${n.type}`} onClick={()=>{if(n.app){onOpenApp(n.app);onClose()}}} style={{cursor:n.app?'pointer':'default'}}><span className="nxos-notif-center-icon">{n.icon}</span><div className="nxos-notif-center-text"><div className="nxos-notif-center-msg">{n.text}</div><div className="nxos-notif-center-time">{fmt(n.createdAt)}</div></div></div>)}</div></div> }
 const OsPopupBalloons = () => { const p=useWorkStore(s=>s.osPopups); const d=useWorkStore(s=>s.dismissOsPopup); if(!p.length) return null; return <div className="nxos-os-balloons">{p.slice(-3).map(pp=><div key={pp.id} className={`nxos-os-balloon ${pp.type}`} onClick={()=>d(pp.id)}><div className="nxos-balloon-header"><span className="nxos-balloon-icon">{pp.icon}</span><span className="nxos-balloon-title">{pp.title}</span><button className="nxos-balloon-close" onClick={e=>{e.stopPropagation();d(pp.id)}}>✕</button></div><div className="nxos-balloon-text">{pp.text}</div></div>)}</div> }
 const NotificationToast = () => { const n=useWorkStore(s=>s.notifications); const c=useWorkStore(s=>s.clearNotification); useEffect(()=>{ if(n.length>0){const t=setTimeout(()=>c(n[0].id),3000);return()=>clearTimeout(t)} },[n,c]); return <div className="nxos-notifications">{n.slice(0,3).map(x=><div key={x.id} className={`nxos-notification ${x.type}`}>{x.text}</div>)}</div> }
-const GameOverOverlay = () => { const s=useWorkStore(x=>x.score); const cc=useWorkStore(x=>x.completedCount); const gc=useWorkStore(x=>x.globalClock); const r=useWorkStore(x=>x.reset); const sg=useGameStore(x=>x.setGameState); const sh=useGameStore(x=>x.setHighScore); const ap=useGameStore(x=>x.addPlaythrough); useEffect(()=>{sh(s);ap({score:s,tasksCompleted:cc,timeElapsed:Math.floor(gc),date:new Date().toISOString()})},[]);return <div className="nxos-bsod"><div className="nxos-bsod-inner"><h1>NexusOS</h1><p>A fatal exception 0E has occurred in VXD BURNOUT(01)</p><br/><div className="nxos-bsod-stats"><span>SCORE: {s} pts</span><span>TASKS: {cc}</span><span>TIME: {Math.floor(gc/60)}m {Math.floor(gc%60)}s</span></div><br/><div className="nxos-bsod-actions"><button className="nxos-btn" onClick={()=>r()}>RETRY</button><button className="nxos-btn" onClick={()=>{r();sg('START')}}>LOG OFF</button></div></div></div> }
+const GameOverOverlay = () => { const s=useWorkStore(x=>x.score); const cc=useWorkStore(x=>x.completedCount); const gc=useWorkStore(x=>x.globalClock); const r=useWorkStore(x=>x.reset); const sg=useGameStore(x=>x.setGameState); const sh=useGameStore(x=>x.setHighScore); const ap=useGameStore(x=>x.addPlaythrough); useEffect(()=>{sh(s);ap({score:s,tasksCompleted:cc,timeElapsed:Math.floor(gc),date:new Date().toISOString()})},[s,cc,gc,sh,ap]);return <div className="nxos-bsod"><div className="nxos-bsod-inner"><h1>NexusOS</h1><p>A fatal exception 0E has occurred in VXD BURNOUT(01)</p><br/><div className="nxos-bsod-stats"><span>SCORE: {s} pts</span><span>TASKS: {cc}</span><span>TIME: {Math.floor(gc/60)}m {Math.floor(gc%60)}s</span></div><br/><div className="nxos-bsod-actions"><button className="nxos-btn" onClick={()=>r()}>RETRY</button><button className="nxos-btn" onClick={()=>{r();sg('START')}}>LOG OFF</button></div></div></div> }
 
 const BootSequence = ({ onComplete }) => { const [lines,setLines]=useState([]); const [prog,setProg]=useState(0); const BL=['NexusOS 98 [Version 4.10.1998]','(C) Nexus Corp 1981-1998.','','HIMEM testing extended memory...done.','Loading WIN98.SYS...','NEXUSCORP PROPRIETARY','','C:\\NEXUS> Mounting drives...','C:\\NEXUS> Connecting to INTRANET...','C:\\NEXUS> Authenticating INTERN_9921...','C:\\NEXUS> Loading desktop...']; useEffect(()=>{let i=0;const iv=setInterval(()=>{if(i<BL.length){setLines(p=>[...p,BL[i]]);setProg((i+1)/BL.length);if(BL[i])playBlip(0.05);i++}else{clearInterval(iv);setTimeout(onComplete,600)}},300);return()=>clearInterval(iv)},[]); return <div className="nxos-boot"><div className="nxos-boot-terminal">{lines.map((l,i)=><div key={i} className="nxos-boot-line">{l}</div>)}<span className="nxos-boot-cursor">_</span></div><div className="nxos-boot-bar"><div className="nxos-boot-bar-fill" style={{width:`${prog*100}%`}}/></div></div> }
 

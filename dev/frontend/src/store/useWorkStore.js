@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { generatePuzzle, OFFLINE_TASKS, MEETING_TEMPLATES, MEETING_DIALOGUES, SLACK_MESSAGES, REALISM_EVENTS } from './puzzleEngine'
 
 // ─── Gemini API (task generation) ────────────────────────────────
-const GEMINI_API_KEY = 'AIzaSyBpk-HvzF2pP6SJ-KqsOSFqf1SeP1oK5bM'
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
 
 const fetchGeminiTask = async () => {
   try {
@@ -239,7 +239,7 @@ export const useWorkStore = create((set, get) => ({
     // Active meeting timer
     let activeMeeting = state.activeMeeting
     if (activeMeeting) {
-      activeMeeting = { ...activeMeeting, timer: activeMeeting.timer - delta }
+      activeMeeting = { ...activeMeeting, timer: activeMeeting.timer - delta * (activeMeeting.speedMultiplier || 1) }
       if (activeMeeting.timer <= 0) {
         // Meeting ended — outcome based on last choice or timeout
         burnoutDelta += 0.05
