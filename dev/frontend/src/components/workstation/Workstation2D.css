@@ -99,7 +99,19 @@
 .nxos-desktop {
   position: absolute;
   inset: 0;
-  background: #008080; /* Classic teal Win98 desktop */
+  background:
+    /* Subtle noise grain overlay for CRT/office feel */
+    repeating-conic-gradient(rgba(255,255,255,0.015) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px,
+    /* Fluorescent light pool — warm center fading out */
+    radial-gradient(ellipse 80% 60% at 50% 30%, rgba(255,245,230,0.08) 0%, transparent 70%),
+    /* Office wall gradient — matches 3D scene palette */
+    linear-gradient(180deg,
+      #2a2f38 0%,       /* dark ceiling shadow */
+      #353b45 15%,      /* upper wall */
+      #3d434d 40%,      /* mid wall — cool gray-blue */
+      #343a42 70%,      /* lower wall */
+      #252a31 100%      /* floor shadow */
+    );
   display: flex;
   flex-direction: column;
 }
