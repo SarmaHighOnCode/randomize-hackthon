@@ -20,6 +20,260 @@ const garble = (text, b) => { if (b < 0.3) return text; return text.split('').ma
 const SAFE_EMPTY_ARRAY = []
 const SAFE_EMPTY_OBJECT = {}
 
+// ─── Right-Click Context Menu ────────────────────────────────────
+const ContextMenu = ({ x, y, onClose }) => {
+  const menuRef = useRef(null)
+  useEffect(() => {
+    const handler = () => onClose()
+    window.addEventListener('click', handler)
+    window.addEventListener('contextmenu', handler)
+    return () => { window.removeEventListener('click', handler); window.removeEventListener('contextmenu', handler) }
+  }, [onClose])
+
+  const doCopy = () => {
+    const sel = window.getSelection()?.toString()
+    if (sel) navigator.clipboard?.writeText(sel).catch(() => {})
+    playBlip(0.1)
+    onClose()
+  }
+  const doPaste = async () => {
+    try {
+      const text = await navigator.clipboard?.readText()
+      const el = document.activeElement
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+        const start = el.selectionStart, end = el.selectionEnd
+        const val = el.value
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set || Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set
+        if (nativeInputValueSetter) {
+          nativeInputValueSetter.call(el, val.substring(0, start) + text + val.substring(end))
+          el.dispatchEvent(new Event('input', { bubbles: true }))
+          el.setSelectionRange(start + text.length, start + text.length)
+        }
+      }
+    } catch(e) {}
+    playBlip(0.1)
+    onClose()
+  }
+  const doCut = () => {
+    const el = document.activeElement
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+      const sel = el.value.substring(el.selectionStart, el.selectionEnd)
+      if (sel) {
+        navigator.clipboard?.writeText(sel).catch(() => {})
+        const start = el.selectionStart
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set || Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set
+        if (nativeInputValueSetter) {
+          nativeInputValueSetter.call(el, el.value.substring(0, el.selectionStart) + el.value.substring(el.selectionEnd))
+          el.dispatchEvent(new Event('input', { bubbles: true }))
+          el.setSelectionRange(start, start)
+        }
+      }
+    }
+    playBlip(0.1)
+    onClose()
+  }
+  const doSelectAll = () => {
+    const el = document.activeElement
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+      el.select()
+    } else {
+      window.getSelection()?.selectAllChildren(document.querySelector('.nxos-desktop') || document.body)
+    }
+    playBlip(0.1)
+    onClose()
+  }
+  const doRefresh = () => {
+    playBlip(0.1)
+    onClose()
+  }
+
+  // Clamp menu position to viewport
+  const style = { left: Math.min(x, window.innerWidth - 160), top: Math.min(y, window.innerHeight - 160) }
+
+  return (
+    <div className="nxos-context-menu" ref={menuRef} style={style} onClick={e => e.stopPropagation()}>
+      <div className="nxos-ctx-item" onClick={doCut}><span className="nxos-ctx-key">✂</span> Cut <span className="nxos-ctx-shortcut">Ctrl+X</span></div>
+      <div className="nxos-ctx-item" onClick={doCopy}><span className="nxos-ctx-key">📋</span> Copy <span className="nxos-ctx-shortcut">Ctrl+C</span></div>
+      <div className="nxos-ctx-item" onClick={doPaste}><span className="nxos-ctx-key">📄</span> Paste <span className="nxos-ctx-shortcut">Ctrl+V</span></div>
+      <div className="nxos-ctx-divider"/>
+      <div className="nxos-ctx-item" onClick={doSelectAll}><span className="nxos-ctx-key"> </span> Select All <span className="nxos-ctx-shortcut">Ctrl+A</span></div>
+      <div className="nxos-ctx-divider"/>
+      <div className="nxos-ctx-item" onClick={doRefresh}><span className="nxos-ctx-key">🔄</span> Refresh</div>
+    </div>
+  )
+}
+
+// ─── How to Play / Tutorial Dialog ──────────────────────────────
+const HowToPlayDialog = ({ onClose }) => {
+  const [page, setPage] = useState(0)
+  const pages = [
+    {
+      title: '🎮 Welcome to NexusOS 98',
+      content: (
+        <div className="nxos-tutorial-page">
+          <p className="nxos-tut-intro">You are <strong>INTERN_9921</strong> at NexusCorp. Your goal: survive the workday without burning out.</p>
+          <div className="nxos-tut-section">
+            <div className="nxos-tut-heading">THE BASICS</div>
+            <ul className="nxos-tut-list">
+              <li><strong>Double-click</strong> desktop icons to open apps</li>
+              <li><strong>Right-click</strong> anywhere for context menu (Copy/Paste)</li>
+              <li>Use the <strong>Start menu</strong> for all apps & settings</li>
+              <li>Check the <strong>taskbar</strong> at the bottom for open apps & stats</li>
+            </ul>
+          </div>
+          <div className="nxos-tut-section">
+            <div className="nxos-tut-heading">YOUR OBJECTIVE</div>
+            <p>Complete tasks, answer emails, and survive meetings to earn <strong>points</strong> and <strong>XP</strong>. Don't let your burnout meter hit 100% or it's game over!</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: '📋 ShadowJira & Puzzles',
+      content: (
+        <div className="nxos-tutorial-page">
+          <div className="nxos-tut-section">
+            <div className="nxos-tut-heading">HOW TASKS WORK</div>
+            <ul className="nxos-tut-list">
+              <li>Open <strong>ShadowJira</strong> to see your task board</li>
+              <li><strong>Click</strong> or <strong>drag</strong> cards: Backlog → In Progress → Done</li>
+              <li>Moving a task to Done opens a <strong>puzzle</strong> — solve it for points!</li>
+              <li>Tasks have <strong>deadlines</strong> — expired tasks hurt your score</li>
+              <li>Higher priority tasks (CRITICAL/HIGH) = more points</li>
+            </ul>
+          </div>
+          <div className="nxos-tut-section">
+            <div className="nxos-tut-heading">PUZZLE TYPES</div>
+            <div className="nxos-tut-grid">
+              <span>🧠 Neural Network</span><span>Wire inputs to hidden nodes</span>
+              <span>🔍 Pattern Match</span><span>Pick the correct pattern</span>
+              <span>🔗 Node Connection</span><span>Click nodes in order</span>
+              <span>📊 Sorting</span><span>Arrange items correctly</span>
+              <span>🧩 Logic Grid</span><span>Solve the logic problem</span>
+              <span>🗺️ Pathfinding</span><span>Navigate the maze</span>
+              <span>⌨️ Text Input</span><span>Type the answer</span>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: '⚡ Combos, XP & Scoring',
+      content: (
+        <div className="nxos-tutorial-page">
+          <div className="nxos-tut-section">
+            <div className="nxos-tut-heading">COMBO SYSTEM</div>
+            <ul className="nxos-tut-list">
+              <li>Complete tasks within <strong>30 seconds</strong> of each other for a combo!</li>
+              <li>Each combo level adds <strong>+0.5x</strong> to your multiplier (max 5x)</li>
+              <li>The combo counter appears on screen when active</li>
+            </ul>
+          </div>
+          <div className="nxos-tut-section">
+            <div className="nxos-tut-heading">XP & LEVELS</div>
+            <ul className="nxos-tut-list">
+              <li>Earn XP from tasks, emails, and meetings</li>
+              <li>Level up to face harder challenges and earn more points</li>
+              <li>Your level shows in the taskbar tray: <strong>Lv.X</strong></li>
+            </ul>
+          </div>
+          <div className="nxos-tut-section">
+            <div className="nxos-tut-heading">ACHIEVEMENTS</div>
+            <p>Unlock achievements for milestones like first task, speed completions, and high combos. They pop up as gold banners!</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: '🔥 Burnout & Survival',
+      content: (
+        <div className="nxos-tutorial-page">
+          <div className="nxos-tut-section">
+            <div className="nxos-tut-heading">BURNOUT METER</div>
+            <ul className="nxos-tut-list">
+              <li>Burnout rises over time and when tasks expire</li>
+              <li>At <strong>50%+</strong> — screen starts glitching, text garbles</li>
+              <li>At <strong>70%+</strong> — critical effects, screen shakes</li>
+              <li>At <strong>100%</strong> — GAME OVER (Blue Screen of Death)</li>
+              <li>Completing tasks <strong>reduces</strong> burnout. Take coffee breaks!</li>
+            </ul>
+          </div>
+          <div className="nxos-tut-section">
+            <div className="nxos-tut-heading">EVENTS TO WATCH FOR</div>
+            <div className="nxos-tut-grid">
+              <span>🚨 Boss Alert</span><span>Close all non-work apps in 5 seconds!</span>
+              <span>📅 Meetings</span><span>Join meetings on time or lose points</span>
+              <span>💬 Slack</span><span>Reply to messages for bonus points</span>
+              <span>📧 Emails</span><span>Read emails before they expire</span>
+              <span>☕ Coffee</span><span>Accept coffee breaks to lower burnout</span>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: '⌨️ Keyboard Shortcuts',
+      content: (
+        <div className="nxos-tutorial-page">
+          <div className="nxos-tut-section">
+            <div className="nxos-tut-heading">QUICK KEYS</div>
+            <div className="nxos-tut-grid shortcuts">
+              <span className="nxos-tut-key">Ctrl+1</span><span>Open ShadowJira</span>
+              <span className="nxos-tut-key">Ctrl+2</span><span>Open QuickOutlook</span>
+              <span className="nxos-tut-key">Ctrl+3</span><span>Open NexusNet</span>
+              <span className="nxos-tut-key">Ctrl+4</span><span>Open Terminal</span>
+              <span className="nxos-tut-key">Ctrl+5</span><span>Open Notepad</span>
+              <span className="nxos-tut-key">Ctrl+6</span><span>Open My Documents</span>
+              <span className="nxos-tut-key">Ctrl+7</span><span>Open My Computer</span>
+              <span className="nxos-tut-key">Escape</span><span>Close active window</span>
+              <span className="nxos-tut-key">Ctrl+C/V</span><span>Copy / Paste</span>
+              <span className="nxos-tut-key">Right-click</span><span>Context menu</span>
+            </div>
+          </div>
+          <div className="nxos-tut-section">
+            <div className="nxos-tut-heading">DIFFICULTY MODES</div>
+            <div className="nxos-tut-grid shortcuts">
+              <span>🎯 Balanced</span><span>Normal pace, good for learning</span>
+              <span>⏱️ Deadline Rush</span><span>Faster tasks, tighter deadlines</span>
+              <span>📅 Meeting Hell</span><span>Non-stop meetings interrupt you</span>
+              <span>💀 Nightmare</span><span>Everything at once. Good luck.</span>
+            </div>
+            <p style={{marginTop:'6px',color:'#808080',fontSize:'0.45rem'}}>Change difficulty in the Start menu.</p>
+          </div>
+          <div className="nxos-tut-ready">
+            <p>You're ready. Open <strong>ShadowJira</strong> and start completing tickets!</p>
+            <p style={{color:'#808080'}}>Tip: Open this guide anytime from Start → Help</p>
+          </div>
+        </div>
+      )
+    },
+  ]
+
+  return (
+    <div className="nxos-puzzle-overlay" onClick={e => e.stopPropagation()}>
+      <div className="nxos-tutorial-dialog">
+        <div className="nxos-window-titlebar" style={{background:'linear-gradient(90deg,#000080,#1084d0)'}}>
+          <div className="nxos-window-titlebar-left"><span className="nxos-window-icon">❓</span><span className="nxos-window-title">How to Play — ShadowIntern</span></div>
+          <div className="nxos-window-buttons"><button className="nxos-win-btn close" onClick={()=>{onClose();playBlip()}}>✕</button></div>
+        </div>
+        <div className="nxos-tutorial-body">
+          <div className="nxos-tutorial-title">{pages[page].title}</div>
+          {pages[page].content}
+          <div className="nxos-tutorial-nav">
+            <button className="nxos-btn" disabled={page===0} onClick={()=>{setPage(p=>p-1);playBlip()}}>◄ Back</button>
+            <span className="nxos-tutorial-dots">{pages.map((_,i)=><span key={i} className={`nxos-tut-dot ${i===page?'active':''}`}/>)}</span>
+            {page < pages.length - 1 ? (
+              <button className="nxos-btn" onClick={()=>{setPage(p=>p+1);playBlip()}}>Next ►</button>
+            ) : (
+              <button className="nxos-btn" style={{background:'#000080',color:'#fff',fontWeight:'bold'}} onClick={()=>{onClose();playBlip()}}>Let's Go!</button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Desktop Icon ────────────────────────────────────────────────
 const DesktopIcon = ({ icon, label, onClick }) => (
   <div className="nxos-desktop-icon" onDoubleClick={() => { onClick(); playBlip() }}>
@@ -36,7 +290,7 @@ const GAME_MODES = [
   { id: 'nightmare', icon: '💀', label: 'Nightmare' },
 ]
 
-const StartMenu = ({ onClose, onOpenApp }) => {
+const StartMenu = ({ onClose, onOpenApp, onShowHelp }) => {
   const gameMode = useWorkStore(s => s.gameMode)
   const setGameMode = useWorkStore(s => s.setGameMode)
   return (
@@ -62,6 +316,7 @@ const StartMenu = ({ onClose, onOpenApp }) => {
           </div>
         ))}
         <div className="nxos-start-divider"/>
+        <div className="nxos-start-item" onClick={()=>{onShowHelp();onClose()}}><span className="nxos-start-item-icon">❓</span> Help — How to Play</div>
         <div className="nxos-start-item shutdown" onClick={()=>{useGameStore.getState().setGameState('START');useWorkStore.getState().reset();onClose()}}><span className="nxos-start-item-icon">🔌</span> Shut Down...</div>
       </div>
     </div>
@@ -712,6 +967,8 @@ const Workstation2D = () => {
 
   const [startMenuOpen,setStartMenuOpen]=useState(false); const [notifCenterOpen,setNotifCenterOpen]=useState(false)
   const [openWindows,setOpenWindows]=useState([]); const [minimizedWindows,setMinimizedWindows]=useState([])
+  const [contextMenu,setContextMenu]=useState(null)
+  const [showTutorial,setShowTutorial]=useState(false)
   const animFrameRef=useRef(null); const lastTimeRef=useRef(performance.now()); const taskTimerRef=useRef(0); const emailTimerRef=useRef(0); const meetingTimerRef=useRef(0); const slackTimerRef=useRef(0); const eventTimerRef=useRef(0)
 
   useEffect(()=>{reset()},[])
@@ -729,6 +986,11 @@ const Workstation2D = () => {
       }
       if (e.key === 'Escape' && activeWindow) {
         closeApp(activeWindow)
+        playBlip()
+      }
+      if (e.key === 'F1') {
+        e.preventDefault()
+        setShowTutorial(true)
         playBlip()
       }
     }
@@ -765,10 +1027,11 @@ const Workstation2D = () => {
   const toggleMinimize=(id)=>{if(minimizedWindows.includes(id)){setMinimizedWindows(p=>p.filter(w=>w!==id));setActiveWindow(id)}else{setMinimizedWindows(p=>[...p,id]);if(activeWindow===id)setActiveWindow(null)}}
 
   return (
-    <div className="nxos-monitor-frame" onClick={()=>startMenuOpen&&setStartMenuOpen(false)}>
+    <div className="nxos-monitor-frame" onClick={()=>{startMenuOpen&&setStartMenuOpen(false);setContextMenu(null)}}
+      onContextMenu={e=>{e.preventDefault();setContextMenu({x:e.clientX,y:e.clientY});playBlip(0.05)}}>
       <div className="nxos-crt-bezel">
         <div className="nxos-scanlines"/><div className="nxos-screen-curve"/>
-        {!bootComplete ? <BootSequence onComplete={()=>setBootComplete(true)}/> : (
+        {!bootComplete ? <BootSequence onComplete={()=>{setBootComplete(true);if(!localStorage.getItem('nxos_tutorial_seen')){setShowTutorial(true);localStorage.setItem('nxos_tutorial_seen','1')}}}/> : (
           <div className={`nxos-desktop ${burnout>0.7?'burnout-critical':burnout>0.5?'burnout-high':''} ${bossAlert?'nxos-screen-shake':''}`} style={{filter:burnout>0.5?`hue-rotate(${Math.sin(Date.now()*0.005)*burnout*20}deg)`:undefined}}>
             <div className="nxos-desktop-icons">
               <DesktopIcon icon="📋" label="ShadowJira" onClick={()=>openApp('jira')}/>
@@ -798,9 +1061,11 @@ const Workstation2D = () => {
                 <span className="nxos-systray-clock">{formatClock(globalClock)}</span>
               </div>
             </div>
-            {startMenuOpen&&<StartMenu onClose={()=>setStartMenuOpen(false)} onOpenApp={openApp}/>}
+            {startMenuOpen&&<StartMenu onClose={()=>setStartMenuOpen(false)} onOpenApp={openApp} onShowHelp={()=>setShowTutorial(true)}/>}
             {notifCenterOpen&&<NotificationCenter onOpenApp={openApp} onClose={()=>setNotifCenterOpen(false)}/>}
             <OsPopupBalloons/><NotificationToast/><SlackPopup/><EventDialog/><AchievementPopup/><ComboIndicator/>
+            {contextMenu&&<ContextMenu x={contextMenu.x} y={contextMenu.y} onClose={()=>setContextMenu(null)}/>}
+            {showTutorial&&<HowToPlayDialog onClose={()=>setShowTutorial(false)}/>}
             {activePuzzle&&<PuzzleModal/>}
             {activeMeeting&&<MeetingWindow/>}
             {bossAlert&&<BossAlertOverlay openWindows={openWindows} closeApp={closeApp}/>}
