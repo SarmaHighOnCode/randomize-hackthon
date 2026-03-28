@@ -5,9 +5,9 @@ export class PlayerController {
     this.camera = camera;
     this.camera.position.set(0, 1.7, 0); // Eye height
     this.enabled = true;
-    this.moveSpeed = 6.0;
-    this.sprintMultiplier = 2.0;
-    this.mouseSensitivity = 0.002;
+    this.moveSpeed = 15.0; // Increased base movement speed
+    this.sprintMultiplier = 3.0; // Increased sprint multiplier
+    this.mouseSensitivity = 0.001; // Lowered sensitivity for more precise/smoother looking around
     this.pitchLimit = Math.PI * 0.44;
     this.pitch = 0;
     this.yaw = 0;
