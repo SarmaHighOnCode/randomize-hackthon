@@ -133,7 +133,7 @@ export class OfficeScene implements GameScene {
       if (child instanceof THREE.Mesh) {
         const mat = child.material as THREE.MeshStandardMaterial;
         if (mat.emissive) {
-          mat.emissiveIntensity = 1.0;
+          mat.emissiveIntensity = 0.3;
           mat.emissive.set(0x2244aa);
         }
       }

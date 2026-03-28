@@ -354,8 +354,8 @@ export function createTextSign(
   fontSize = 24
 ): THREE.Mesh {
   const canvas = document.createElement('canvas');
-  // High resolution for clear text, scaled up by 4
-  const scale = 8;
+  // High resolution for clear text, scaled for clarity but clamped to avoid memory crashes on low-end devices
+  const scale = 4;
   canvas.width = 512 * scale;
   canvas.height = Math.floor(512 * scale * (height / width));
   const ctx = canvas.getContext('2d')!;

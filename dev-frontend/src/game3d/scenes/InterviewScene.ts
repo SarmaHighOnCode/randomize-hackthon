@@ -75,12 +75,7 @@ export class InterviewScene implements GameScene {
       const fixture = new THREE.Mesh(
         new THREE.BoxGeometry(0.8, 0.04, 0.15),
         new THREE.MeshStandardMaterial({
-          color: 0xffffff, emissive: 0xeeeeff, emissiveIntensity: 1.8,
-        })
-      );
-      fixture.position.set(lx, roomH - 0.02, 0);
-      ctx.scene.add(fixture);
-          }
+          color: 0xffffff, emissive: 0xeeeeff, emissiveIntensity: 0.3,
 
     // Walls
     ctx.scene.add(createBox(roomW, roomH, 0.15, wallColor, [0, roomH / 2, -halfD]));
