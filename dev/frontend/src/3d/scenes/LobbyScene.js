@@ -302,6 +302,33 @@ export class LobbyScene {
       autoTrigger: true,
     });
 
+    // Water cooler
+    ctx.triggers.add({
+      id: 'waterCooler',
+      position: new THREE.Vector3(-9, 1, -5),
+      size: new THREE.Vector3(2, 2, 2),
+      once: true,
+      promptText: '[E] Examine Cooler',
+    });
+
+    // TV on wall
+    ctx.triggers.add({
+      id: 'lobbyTV',
+      position: new THREE.Vector3(-8, 1.7, 5),
+      size: new THREE.Vector3(3, 3, 2),
+      once: true,
+      promptText: '[E] Watch TV',
+    });
+
+    // Couches
+    ctx.triggers.add({
+      id: 'lobbyCouch',
+      position: new THREE.Vector3(0, 0.5, 1),
+      size: new THREE.Vector3(3, 2, 2),
+      once: true,
+      promptText: '[E] Examine Couches',
+    });
+
     // Colliders
     ctx.player.setColliders([
       new THREE.Box3(new THREE.Vector3(-10.5, 0, -12.5), new THREE.Vector3(10.5, 10, -11.5)),

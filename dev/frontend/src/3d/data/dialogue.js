@@ -63,6 +63,107 @@ export const DIALOGUE = {
       { text: 'Ready to... read your first Jira ticket.', delay: 2000 },
     ],
   },
+
+  // --- STREET SCENE INTERACTIONS ---
+  trashResumes: {
+    npcName: 'OBSERVATION',
+    lines: [
+      { text: 'A trash can overflowing with resumes.', delay: 400 },
+      { text: 'Most of them still warm from the printer.', delay: 0 },
+      { text: '"Top 1% on LinkedIn" — crossed out in red.', delay: 0 },
+    ],
+  },
+  hiringPoster: {
+    npcName: 'POSTER',
+    lines: [
+      { text: '"NOW HIRING: INTERNS"', delay: 300 },
+      { text: '"No Experience Needed"', delay: 0 },
+      { text: 'In smaller print: "But You Will Get Plenty."', delay: 600 },
+      { text: 'Someone scratched "RUN" into the bottom.', delay: 0 },
+    ],
+  },
+  newspaperBox: {
+    npcName: 'HEADLINE',
+    lines: [
+      { text: '"NEXUS CORP WINS BEST WORKPLACE AWARD"', delay: 400 },
+      { text: '"...for the 12th consecutive year."', delay: 0 },
+      { text: '"Employees too afraid to vote otherwise."', delay: 800 },
+    ],
+  },
+  busStop: {
+    npcName: 'OBSERVATION',
+    lines: [
+      { text: 'A bus stop bench.', delay: 300 },
+      { text: 'Someone carved "TURN BACK" into the wood.', delay: 600 },
+      { text: 'The bus schedule says "Next bus: After your shift."', delay: 0 },
+    ],
+  },
+
+  // --- LOBBY SCENE INTERACTIONS ---
+  waterCooler: {
+    npcName: 'WATER COOLER',
+    lines: [
+      { text: '"OUT OF WATER"', delay: 300 },
+      { text: 'It has been out of water since 2019.', delay: 600 },
+      { text: 'Nobody has filed a ticket about it.', delay: 0 },
+      { text: 'Filing tickets is someone else\'s job.', delay: 0 },
+    ],
+  },
+  lobbyTV: {
+    npcName: 'CORPORATE TV',
+    lines: [
+      { text: 'The screen cycles through core values:', delay: 300 },
+      { text: '"INNOVATION. INTEGRITY. IMPACT."', delay: 400 },
+      { text: 'It has been playing this loop for 4 years.', delay: 0 },
+      { text: 'No one has ever looked up.', delay: 0 },
+    ],
+  },
+  lobbyCouch: {
+    npcName: 'OBSERVATION',
+    lines: [
+      { text: 'Premium designer couches.', delay: 300 },
+      { text: 'Cost more than your annual salary.', delay: 0 },
+      { text: 'Sitting is not permitted during work hours.', delay: 600 },
+    ],
+  },
+
+  // --- OFFICE SCENE INTERACTIONS ---
+  sprintBoard: {
+    npcName: 'SPRINT BOARD',
+    lines: [
+      { text: 'The sprint board tells a story:', delay: 300 },
+      { text: 'TODO: 47 tickets.', delay: 200 },
+      { text: 'IN PROGRESS: 12 tickets.', delay: 200 },
+      { text: 'BLOCKED: 31 tickets.', delay: 200 },
+      { text: 'DONE: ...empty.', delay: 600 },
+      { text: 'Sprint ends tomorrow.', delay: 0 },
+    ],
+  },
+  incidentSign: {
+    npcName: 'SIGN',
+    lines: [
+      { text: '"Days Without Incident: 0"', delay: 300 },
+      { text: 'The highest it ever reached was 1.', delay: 600 },
+      { text: 'That day, the sign itself fell off the wall.', delay: 0 },
+    ],
+  },
+  salarySign: {
+    npcName: 'SIGN',
+    lines: [
+      { text: '"Please Do Not Discuss Salary. Or Feelings."', delay: 400 },
+      { text: 'Printed on the most expensive paper in the building.', delay: 0 },
+      { text: 'Framed in mahogany.', delay: 0 },
+    ],
+  },
+  coffeeCups: {
+    npcName: 'OBSERVATION',
+    lines: [
+      { text: '14 coffee cups on one desk.', delay: 300 },
+      { text: 'Each one from a different day.', delay: 0 },
+      { text: 'The owner was last seen "stepping out for a minute."', delay: 600 },
+      { text: 'That was three weeks ago.', delay: 0 },
+    ],
+  },
 };
 
 export const INTERVIEW_CHOICES = [

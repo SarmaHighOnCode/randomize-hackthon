@@ -119,6 +119,62 @@ export class OfficeScene {
       promptText: '[E] Start Work',
     });
 
+    // --- COWORKER NPC TRIGGERS ---
+    // Coworker at printer (index 0)
+    ctx.triggers.add({
+      id: 'coworkerPrinter',
+      position: new THREE.Vector3(-5, 1, -5),
+      size: new THREE.Vector3(3, 2, 3),
+      once: true,
+      promptText: '[E] Talk to Coworker',
+    });
+
+    // Coworker at desk (index 1)
+    ctx.triggers.add({
+      id: 'coworkerDesk',
+      position: new THREE.Vector3(8, 1, 12),
+      size: new THREE.Vector3(3, 2, 3),
+      once: true,
+      promptText: '[E] Talk to Coworker',
+    });
+
+    // --- ENVIRONMENTAL TRIGGERS ---
+    // Sprint board
+    ctx.triggers.add({
+      id: 'sprintBoard',
+      position: new THREE.Vector3(-7, 1.5, 0),
+      size: new THREE.Vector3(2, 3, 3),
+      once: true,
+      promptText: '[E] Read Sprint Board',
+    });
+
+    // Incident counter
+    ctx.triggers.add({
+      id: 'incidentSign',
+      position: new THREE.Vector3(7, 1.5, -2),
+      size: new THREE.Vector3(2, 3, 3),
+      once: true,
+      promptText: '[E] Read Sign',
+    });
+
+    // Salary sign
+    ctx.triggers.add({
+      id: 'salarySign',
+      position: new THREE.Vector3(0, 1.5, -9),
+      size: new THREE.Vector3(3, 3, 2),
+      once: true,
+      promptText: '[E] Read Sign',
+    });
+
+    // 14 coffee cups desk
+    ctx.triggers.add({
+      id: 'coffeeCups',
+      position: new THREE.Vector3(1.5, 1, -6),
+      size: new THREE.Vector3(2, 2, 2),
+      once: true,
+      promptText: '[E] Examine Desk',
+    });
+
     // Colliders (rough grid)
     const colliders = [
         new THREE.Box3(new THREE.Vector3(-20, 0, -20.5), new THREE.Vector3(20, 4, -19.5)),

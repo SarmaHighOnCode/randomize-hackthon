@@ -5,8 +5,8 @@ export class PlayerController {
     this.camera = camera;
     this.camera.position.set(0, 1.7, 0); // Eye height
     this.enabled = true;
-    this.moveSpeed = 10.0;
-    this.sprintMultiplier = 2.5;
+    this.moveSpeed = 15.0; // Increased base movement speed
+    this.sprintMultiplier = 3.0; // Increased sprint speed
     this.mouseSensitivity = 0.002;
     this.pitchLimit = Math.PI * 0.44;
     this.euler = new THREE.Euler(0, 0, 0, 'YXZ');

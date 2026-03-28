@@ -6,6 +6,8 @@ import {
 export class StreetScene {
   constructor() {
     this.name = 'street';
+    this.hintShown = false;
+    this.hintTimer = 0;
   }
 
   setup(ctx) {
@@ -389,6 +391,42 @@ export class StreetScene {
       autoTrigger: true,
     });
 
+    // Interactive triggers — trash can with resumes
+    ctx.triggers.add({
+      id: 'trashResumes',
+      position: new THREE.Vector3(2.5, 0.5, -7),
+      size: new THREE.Vector3(1.5, 2, 1.5),
+      once: true,
+      promptText: '[E] Examine Trash',
+    });
+
+    // Hiring poster
+    ctx.triggers.add({
+      id: 'hiringPoster',
+      position: new THREE.Vector3(-2.8, 1.6, -7.5),
+      size: new THREE.Vector3(2, 2, 1.5),
+      once: true,
+      promptText: '[E] Read Poster',
+    });
+
+    // Newspaper box
+    ctx.triggers.add({
+      id: 'newspaperBox',
+      position: new THREE.Vector3(-3, 0.5, 2),
+      size: new THREE.Vector3(1.5, 2, 1.5),
+      once: true,
+      promptText: '[E] Read Headline',
+    });
+
+    // Bus stop bench
+    ctx.triggers.add({
+      id: 'busStop',
+      position: new THREE.Vector3(3, 1, 4),
+      size: new THREE.Vector3(3, 2, 2),
+      once: true,
+      promptText: '[E] Examine Bench',
+    });
+
     // Colliders
     ctx.player.setColliders([
       new THREE.Box3(new THREE.Vector3(-5, 0, -8.5), new THREE.Vector3(5, 4, -7.5)),
@@ -400,9 +438,19 @@ export class StreetScene {
     ]);
   }
 
-  update(_delta, _ctx) {
-    // Nothing dynamic in this scene
+  update(_delta, ctx) {
+    if (!this.hintShown) {
+      this.hintTimer = (this.hintTimer || 0) + _delta;
+      if (this.hintTimer > 2.0) {
+        this.hintShown = true;
+        ctx.showNarrator('LOOK AROUND. EXPLORE. PRESS [E] TO INTERACT.');
+        setTimeout(() => ctx.hideNarrator(), 4000);
+      }
+    }
   }
 
-  cleanup() {}
+  cleanup() {
+    this.hintShown = false;
+    this.hintTimer = 0;
+  }
 }

@@ -111,7 +111,7 @@ export class DeskScene {
     this.totalTime += delta;
 
     if (this.booting) {
-      this.bootProgress += delta * 0.15; // Slow deliberate boot
+      this.bootProgress += delta * 0.25; // Faster boot sequence
       
       // Camera dolly-in
       const t = Math.min(this.bootProgress * 1.5, 1);
