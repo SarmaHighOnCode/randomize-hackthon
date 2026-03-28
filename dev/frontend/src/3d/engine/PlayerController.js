@@ -5,10 +5,12 @@ export class PlayerController {
     this.camera = camera;
     this.camera.position.set(0, 1.7, 0); // Eye height
     this.enabled = true;
-    this.moveSpeed = 15.0; // Increased base movement speed
-    this.sprintMultiplier = 3.0; // Increased sprint speed
+    this.moveSpeed = 6.0;
+    this.sprintMultiplier = 2.0;
     this.mouseSensitivity = 0.002;
     this.pitchLimit = Math.PI * 0.44;
+    this.pitch = 0;
+    this.yaw = 0;
     this.euler = new THREE.Euler(0, 0, 0, 'YXZ');
     this.velocity = new THREE.Vector3();
     this.direction = new THREE.Vector3();
@@ -29,10 +31,12 @@ export class PlayerController {
 
     document.addEventListener('mousemove', (e) => {
       if (!this.isLocked || !this.enabled) return;
-      this.euler.setFromQuaternion(this.camera.quaternion);
-      this.euler.y -= e.movementX * this.mouseSensitivity;
-      this.euler.x -= e.movementY * this.mouseSensitivity;
-      this.euler.x = Math.max(-this.pitchLimit, Math.min(this.pitchLimit, this.euler.x));
+      this.yaw -= e.movementX * this.mouseSensitivity;
+      this.pitch -= e.movementY * this.mouseSensitivity;
+      
+      this.pitch = Math.max(-this.pitchLimit, Math.min(this.pitchLimit, this.pitch));
+
+      this.euler.set(this.pitch, this.yaw, 0, 'YXZ');
       this.camera.quaternion.setFromEuler(this.euler);
     });
 

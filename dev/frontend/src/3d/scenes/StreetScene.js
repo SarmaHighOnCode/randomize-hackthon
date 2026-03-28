@@ -362,12 +362,11 @@ export class StreetScene {
     ctx.scene.add(createBox(3, 2.5, 0.1, 0x223344, [3, 1.25, 4.7])); // back wall (glass/dark)
     ctx.scene.add(createBox(2, 0.1, 0.6, 0x664422, [3, 0.5, 4.3])); // bench
 
-    // Bus stop shelter
-    ctx.scene.add(createBox(3, 0.1, 1.5, 0x333333, [3, 2.5, 4])); // roof
-    ctx.scene.add(createBox(0.1, 2.5, 0.1, 0x555555, [1.6, 1.25, 3.3])); // pole FL
-    ctx.scene.add(createBox(0.1, 2.5, 0.1, 0x555555, [4.4, 1.25, 3.3])); // pole FR
-    ctx.scene.add(createBox(3, 2.5, 0.1, 0x223344, [3, 1.25, 4.7])); // back wall (glass/dark)
-    ctx.scene.add(createBox(2, 0.1, 0.6, 0x664422, [3, 0.5, 4.3])); // bench
+    // Carving on bench — "TURN BACK" scratched into the wood
+    const benchCarving = createTextSign('TURN BACK', 0.6, 0.12, '#664422', '#3a2a1a', 16);
+    benchCarving.position.set(3, 0.56, 4.0);
+    benchCarving.rotation.x = -Math.PI / 2;
+    ctx.scene.add(benchCarving);
 
     // --- SIDEWALK DETAIL ---
     // Fire hydrant
