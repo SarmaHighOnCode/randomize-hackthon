@@ -7,6 +7,11 @@ import {
 export class LobbyScene {
   constructor() {
     this.name = 'lobby';
+    this.receptionistNPC = null;
+    this.totalTime = 0;
+    this.flickerLights = [];
+    this.flickerTimer = 0;
+    this.flickerActive = false;
   }
 
   setup(ctx) {
@@ -29,20 +34,23 @@ export class LobbyScene {
     ctx.scene.add(createCeiling(26, 26, 8.0, 0xd8d8d8));
 
     // --- CEILING DETAIL: Fluorescent light strips ---
+    this.flickerLights = [];
     for (let lz = -9; lz <= 9; lz += 6) {
       const fixtureGeo = new THREE.BoxGeometry(1.2, 0.06, 0.2);
       const fixtureMat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
         emissive: 0xeeeeff,
-        emissiveIntensity: 1.5, // Normalized
+        emissiveIntensity: 1.5,
       });
       const fixture = new THREE.Mesh(fixtureGeo, fixtureMat);
       fixture.position.set(-4, 7.96, lz);
       ctx.scene.add(fixture);
+      this.flickerLights.push(fixture);
 
-      const fixture2 = fixture.clone();
+      const fixture2 = new THREE.Mesh(fixtureGeo.clone(), fixtureMat.clone());
       fixture2.position.set(4, 7.96, lz);
       ctx.scene.add(fixture2);
+      this.flickerLights.push(fixture2);
     }
 
     // --- ARCHITECTURE ---
@@ -195,6 +203,8 @@ export class LobbyScene {
     receptionist.position.y = 0.35;
     receptionist.scale.set(1.1, 1.1, 1.1);
     ctx.scene.add(receptionist);
+    this.receptionistNPC = receptionist;
+    this.receptionistBaseY = 0.35;
 
     // --- SEATING ---
     const createCouch = (x, z, rotationY) => {
@@ -302,6 +312,33 @@ export class LobbyScene {
       autoTrigger: true,
     });
 
+    // Water cooler
+    ctx.triggers.add({
+      id: 'waterCooler',
+      position: new THREE.Vector3(-9, 1, -5),
+      size: new THREE.Vector3(2, 2, 2),
+      once: true,
+      promptText: '[E] Examine Cooler',
+    });
+
+    // TV on wall
+    ctx.triggers.add({
+      id: 'lobbyTV',
+      position: new THREE.Vector3(-8, 1.7, 5),
+      size: new THREE.Vector3(3, 3, 2),
+      once: true,
+      promptText: '[E] Watch TV',
+    });
+
+    // Couches
+    ctx.triggers.add({
+      id: 'lobbyCouch',
+      position: new THREE.Vector3(0, 0.5, 1),
+      size: new THREE.Vector3(3, 2, 2),
+      once: true,
+      promptText: '[E] Examine Couches',
+    });
+
     // Colliders
     ctx.player.setColliders([
       new THREE.Box3(new THREE.Vector3(-10.5, 0, -12.5), new THREE.Vector3(10.5, 10, -11.5)),
@@ -316,6 +353,56 @@ export class LobbyScene {
     ]);
   }
 
-  update() {}
-  cleanup() {}
+  update(delta) {
+    this.totalTime += delta;
+    const t = this.totalTime;
+
+    // Receptionist per-part animation: corporate automaton at the desk
+    if (this.receptionistNPC) {
+      const parts = this.receptionistNPC.userData.parts;
+      if (parts) {
+        // Mechanical typing — robotic, perfectly metronomic (fitting "GREETING UNIT")
+        const typeCycle = Math.sin(t * 5.0);
+        if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.3 + typeCycle * 0.12;
+        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.3 - typeCycle * 0.12;
+
+        // Head: sweeps slowly side to side as if scanning for threats
+        if (parts.head) {
+          parts.head.rotation.y = Math.sin(t * 0.5) * 0.2;
+          parts.head.rotation.x = -0.05; // Slight downward tilt at keyboard
+        }
+
+        // Torso: perfectly upright, no hunching — uncanny stillness
+        if (parts.torso) parts.torso.rotation.x = 0;
+      }
+      // Almost zero vertical drift — inhuman stillness
+      this.receptionistNPC.position.y = this.receptionistBaseY + Math.sin(t * 0.7) * 0.003;
+    }
+
+    // Occasional fluorescent flicker — picks one random light, dims it briefly
+    this.flickerTimer += delta;
+    if (!this.flickerActive && this.flickerTimer > 8.0 + Math.random() * 6) {
+      this.flickerActive = true;
+      this.flickerTimer = 0;
+      const light = this.flickerLights[Math.floor(Math.random() * this.flickerLights.length)];
+      if (light) {
+        const originalIntensity = 1.5;
+        light.material.emissiveIntensity = 0.1;
+        setTimeout(() => { light.material.emissiveIntensity = originalIntensity; }, 80);
+        setTimeout(() => { light.material.emissiveIntensity = 0.1; }, 160);
+        setTimeout(() => {
+          light.material.emissiveIntensity = originalIntensity;
+          this.flickerActive = false;
+        }, 260);
+      }
+    }
+  }
+
+  cleanup() {
+    this.receptionistNPC = null;
+    this.totalTime = 0;
+    this.flickerLights = [];
+    this.flickerTimer = 0;
+    this.flickerActive = false;
+  }
 }

@@ -7,6 +7,10 @@ import {
 export class OfficeScene {
   constructor() {
     this.name = 'office';
+    this.coworkerNpcs = [];
+    this.totalTime = 0;
+    this.phoneRung = false;
+    this.phoneTimer = 0;
   }
 
   setup(ctx) {
@@ -53,6 +57,7 @@ export class OfficeScene {
       { x: -12.75 + 1, z: 10 + 2.2, ry: Math.PI },      // Pod(-1.5, 1) right desk back
       { x: 12.75 - 1, z: -10 + 2.2, ry: Math.PI },      // Pod(1.5,-1) left desk back
     ];
+    this.coworkerNpcs = [];
     coworkers.forEach((pos, i) => {
       const npc = createNPC(pos.x, pos.z, {
         bodyColor: 0x334455,
@@ -60,6 +65,7 @@ export class OfficeScene {
       });
       npc.rotation.y = pos.ry;
       ctx.scene.add(npc);
+      this.coworkerNpcs.push(npc);
     });
 
     // --- YOUR DESK ---
@@ -222,8 +228,64 @@ export class OfficeScene {
     ctx.scene.add(createBox(0.05, 1.1, 4, 0x5a6d7a, [x, 0.55, z]));
   }
 
-  update() {}
-  cleanup() {}
+  update(delta, ctx) {
+    this.totalTime += delta;
+
+    // Per-part NPC animations — exhausted office workers typing at desks
+    this.coworkerNpcs.forEach((npc, i) => {
+      const parts = npc.userData.parts;
+      if (!parts) return;
+
+      const phase = npc.userData.idlePhase ?? 0;
+      const t = this.totalTime + phase;
+
+      // Typing rhythm: alternating forearm tap, slow and mechanical
+      const typingCycle = Math.sin(t * 3.8 + i * 0.9);
+      if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.3 + typingCycle * 0.09;
+      if (parts.rightForearm) parts.rightForearm.rotation.x = -0.3 - typingCycle * 0.09;
+
+      // Slight torso forward lean (hunched over desk)
+      if (parts.torso) parts.torso.rotation.x = 0.07 + Math.sin(t * 0.4) * 0.015;
+
+      // Head: normally tilted slightly down (reading screen),
+      // occasionally slowly raises to look at something, then back down
+      if (parts.head) {
+        const lookUp = Math.sin(t * 0.18 + i * 1.7) > 0.72
+          ? 0.12   // briefly glances up
+          : -0.14; // back to staring at screen
+        parts.head.rotation.x += (lookUp - parts.head.rotation.x) * Math.min(1, 1.5 * delta);
+        // Very slow side-to-side micro-sway (dead-eyed stare drift)
+        parts.head.rotation.y = Math.sin(t * 0.22 + i * 2.3) * 0.04;
+      }
+
+      // Whole-group very subtle vertical drift (breathing)
+      const baseY = npc.userData.baseY ?? (npc.userData.baseY = npc.position.y);
+      npc.position.y = baseY + Math.sin(t * 0.9) * 0.005;
+    });
+
+    // Phone ring event — fires once ~5 seconds after entering
+    if (!this.phoneRung) {
+      this.phoneTimer += delta;
+      if (this.phoneTimer > 5.0) {
+        this.phoneRung = true;
+        ctx.showNarrator('A phone rings somewhere in the office.');
+        setTimeout(() => {
+          ctx.hideNarrator();
+          setTimeout(() => {
+            ctx.showNarrator('Nobody looks up.');
+            setTimeout(() => ctx.hideNarrator(), 2500);
+          }, 2200);
+        }, 2000);
+      }
+    }
+  }
+
+  cleanup() {
+    this.coworkerNpcs = [];
+    this.totalTime = 0;
+    this.phoneRung = false;
+    this.phoneTimer = 0;
+  }
 }
 
 function createBox(w, h, d, color, pos) {

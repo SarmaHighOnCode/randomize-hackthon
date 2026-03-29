@@ -198,9 +198,9 @@ export class InterviewScene {
     this.totalTime += delta;
     this.phaseTimer += delta;
 
-    // NPC bob
-    if (this.npc1Group) this.npc1Group.position.y = 0.3 + Math.sin(this.totalTime * 1.5) * this.npcBobAmplitude;
-    if (this.npc2Group) this.npc2Group.position.y = 0.3 + Math.sin(this.totalTime * 1.8 + 2) * this.npcBobAmplitude;
+    // Phase-driven NPC body language
+    this._animateInterviewerNPC(delta, this.npc1Group, this.totalTime, 0);
+    this._animateInterviewerNPC(delta, this.npc2Group, this.totalTime * 1.1, 1.4);
 
     // Screen shake
     let shakeOffset = new THREE.Vector3();
@@ -260,24 +260,19 @@ export class InterviewScene {
         break;
 
       case 'dialogue_start':
-        this.npcBobAmplitude = 0.025;
         break;
 
       case 'choosing':
         this.targetLookAt.set(0, 1.4, -1.8);
-        this.npcBobAmplitude = 0.01;
         break;
 
       case 'result':
-        this.npcBobAmplitude = 0.015;
         break;
 
       case 'hired':
-        this.npcBobAmplitude = 0.03;
         break;
 
       case 'farewell':
-        this.npcBobAmplitude = 0.02;
         break;
 
       case 'transitioning':
@@ -285,6 +280,75 @@ export class InterviewScene {
           ctx.transitionTo('office');
         }
         break;
+    }
+  }
+
+  _animateInterviewerNPC(delta, npc, t, phaseOffset) {
+    if (!npc) return;
+    const parts = npc.userData.parts;
+    if (!parts) return;
+
+    const baseY = npc.userData.baseY ?? (npc.userData.baseY = npc.position.y);
+
+    switch (this.phase) {
+      case 'entering':
+      case 'sitting':
+        // Interviewers sit back, arms on table — waiting, slightly bored
+        if (parts.torso) parts.torso.rotation.x += (-0.06 - parts.torso.rotation.x) * Math.min(1, 3 * delta);
+        if (parts.head) {
+          parts.head.rotation.x += (-0.08 - parts.head.rotation.x) * Math.min(1, 2 * delta);
+          parts.head.rotation.y += (Math.sin(t * 0.2 + phaseOffset) * 0.06 - parts.head.rotation.y) * Math.min(1, 1.5 * delta);
+        }
+        if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.15;
+        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.15;
+        npc.position.y = baseY + Math.sin(t * 0.9 + phaseOffset) * 0.004;
+        break;
+
+      case 'dialogue_start':
+      case 'result':
+        // Leaning slightly forward, engaged — subtle "interviewer mode"
+        if (parts.torso) parts.torso.rotation.x += (0.1 - parts.torso.rotation.x) * Math.min(1, 3 * delta);
+        if (parts.head) {
+          // Head bobs slightly while speaking
+          parts.head.rotation.x += (Math.sin(t * 2.5 + phaseOffset) * 0.04 - parts.head.rotation.x) * Math.min(1, 4 * delta);
+        }
+        // "Shuffling papers" — forearm rocks side to side
+        if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.25 + Math.sin(t * 1.8 + phaseOffset) * 0.07;
+        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.25 - Math.sin(t * 1.8 + phaseOffset) * 0.05;
+        npc.position.y = baseY + Math.sin(t * 1.4 + phaseOffset) * 0.008;
+        break;
+
+      case 'choosing':
+        // Interviewers sit back, arms folded, watching — eerie stillness
+        if (parts.torso) parts.torso.rotation.x += (-0.04 - parts.torso.rotation.x) * Math.min(1, 2 * delta);
+        if (parts.head) {
+          // Slow, deliberate tilt toward the player
+          parts.head.rotation.x += (-0.05 - parts.head.rotation.x) * Math.min(1, 1.5 * delta);
+          parts.head.rotation.y += (0 - parts.head.rotation.y) * Math.min(1, 2 * delta);
+        }
+        if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.1;
+        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.1;
+        npc.position.y = baseY + Math.sin(t * 0.5 + phaseOffset) * 0.002;
+        break;
+
+      case 'hired':
+      case 'farewell':
+        // Interviewer 2 leans forward excitedly, interviewer 1 relaxes back
+        if (parts.torso) {
+          const targetLean = phaseOffset < 1 ? 0.14 : -0.05;
+          parts.torso.rotation.x += (targetLean - parts.torso.rotation.x) * Math.min(1, 3 * delta);
+        }
+        if (parts.head) {
+          parts.head.rotation.x += (0.05 - parts.head.rotation.x) * Math.min(1, 2.5 * delta);
+          parts.head.rotation.y += (Math.sin(t * 0.4 + phaseOffset) * 0.05 - parts.head.rotation.y) * Math.min(1, 2 * delta);
+        }
+        if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.3 + Math.sin(t * 1.2 + phaseOffset) * 0.06;
+        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.3 - Math.sin(t * 1.2 + phaseOffset) * 0.06;
+        npc.position.y = baseY + Math.sin(t * 1.1 + phaseOffset) * 0.006;
+        break;
+
+      default:
+        npc.position.y = baseY + Math.sin(t * 0.8 + phaseOffset) * 0.003;
     }
   }
 
@@ -302,20 +366,41 @@ export class InterviewScene {
   onChoiceMade(ctx, index) {
     this.phase = 'result';
     this.phaseTimer = 0;
-    this.cutToSpeaker(1);
-    ctx.showNarrator('The interviewer scribbles something on their notepad.');
-    
+
+    // Each choice gets a different camera reaction
+    if (index === 2) {
+      // Choice C (...): camera locks slowly on interviewer 1 staring
+      this.cameraLerpSpeed = 0.6;
+      this.targetCameraPos.set(-0.3, 1.35, 1.0);
+      this.targetLookAt.copy(this.lookAtInterviewer1);
+    } else {
+      this.cutToSpeaker(1);
+    }
+
+    const narratorText = index === 0
+      ? 'The interviewer nods immediately.'
+      : index === 1
+      ? 'The interviewer pauses.'
+      : 'The interviewer stares at you.';
+
+    const resultKey = index === 0 ? 'interviewResultA' : index === 1 ? 'interviewResultB' : 'interviewResultC';
+    const pauseDuration = index === 0 ? 600 : index === 1 ? 2800 : 5000;
+    const shakeIntensity = index === 0 ? 0.03 : index === 1 ? 0.07 : 0.18;
+
+    ctx.showNarrator(narratorText);
+
     setTimeout(() => {
       ctx.hideNarrator();
+      this.cameraLerpSpeed = 3.0;
       this.cutToSpeaker(1);
-      ctx.dialogue.play(DIALOGUE.interviewResult, () => {
+      ctx.dialogue.play(DIALOGUE[resultKey], () => {
         this.phase = 'hired';
         this.phaseTimer = 0;
-        this.shakeIntensity = 0.08;
+        this.shakeIntensity = shakeIntensity;
         ctx.setFade(0.4);
         setTimeout(() => ctx.setFade(0), 300);
         ctx.showNarrator('...wait, that\'s it?');
-        
+
         setTimeout(() => {
           ctx.hideNarrator();
           this.cutToSpeaker(2);
@@ -329,7 +414,7 @@ export class InterviewScene {
           });
         }, 2500);
       });
-    }, 2000);
+    }, pauseDuration);
   }
 
   cleanup() {

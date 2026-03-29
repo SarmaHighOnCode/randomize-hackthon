@@ -136,7 +136,7 @@ export function createNPC(
   const skinMat = new THREE.MeshStandardMaterial({ color: skinTone, roughness: 0.7 });
   const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.8 });
 
-  // --- Torso ---
+  // --- Torso (pivot for lean animations) ---
   const torso = new THREE.Mesh(
     new THREE.CylinderGeometry(0.17, 0.22, 0.65, 8),
     bodyMat
@@ -153,31 +153,35 @@ export function createNPC(
   group.add(shoulders);
 
   // --- Arms ---
-  for (const side of [-1, 1]) {
-    const upperArm = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.06, 0.055, 0.35, 6),
-      bodyMat
-    );
-    upperArm.position.set(side * 0.3, 1.15, 0);
-    upperArm.rotation.z = side * 0.15;
-    group.add(upperArm);
+  const leftUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 6), bodyMat);
+  leftUpperArm.position.set(-0.3, 1.15, 0);
+  leftUpperArm.rotation.z = -0.15;
+  group.add(leftUpperArm);
 
-    const forearm = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.05, 0.045, 0.25, 6),
-      skinMat
-    );
-    forearm.position.set(side * 0.32, 0.9, 0.05);
-    forearm.rotation.z = side * 0.1;
-    forearm.rotation.x = -0.3;
-    group.add(forearm);
+  const rightUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 6), bodyMat);
+  rightUpperArm.position.set(0.3, 1.15, 0);
+  rightUpperArm.rotation.z = 0.15;
+  group.add(rightUpperArm);
 
-    const hand = new THREE.Mesh(
-      new THREE.BoxGeometry(0.06, 0.04, 0.06),
-      skinMat
-    );
-    hand.position.set(side * 0.33, 0.77, 0.1);
-    group.add(hand);
-  }
+  const leftForearm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.045, 0.25, 6), skinMat);
+  leftForearm.position.set(-0.32, 0.9, 0.05);
+  leftForearm.rotation.z = -0.1;
+  leftForearm.rotation.x = -0.3;
+  group.add(leftForearm);
+
+  const rightForearm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.045, 0.25, 6), skinMat);
+  rightForearm.position.set(0.32, 0.9, 0.05);
+  rightForearm.rotation.z = 0.1;
+  rightForearm.rotation.x = -0.3;
+  group.add(rightForearm);
+
+  const leftHand = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.06), skinMat);
+  leftHand.position.set(-0.33, 0.77, 0.1);
+  group.add(leftHand);
+
+  const rightHand = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.06), skinMat);
+  rightHand.position.set(0.33, 0.77, 0.1);
+  group.add(rightHand);
 
   // --- Neck ---
   const neck = new THREE.Mesh(
@@ -291,6 +295,17 @@ export function createNPC(
 
   group.userData.isNPC = true;
   group.userData.idlePhase = Math.random() * Math.PI * 2;
+
+  // Expose animatable parts for per-frame animation in scene update loops
+  group.userData.parts = {
+    head,
+    torso,
+    shoulders,
+    leftForearm,
+    rightForearm,
+    leftUpperArm,
+    rightUpperArm,
+  };
 
   return group;
 }

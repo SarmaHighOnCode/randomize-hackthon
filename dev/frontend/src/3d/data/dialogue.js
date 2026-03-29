@@ -29,6 +29,40 @@ export const DIALOGUE = {
       { text: "You start Monday.", delay: 0 },
     ],
   },
+  interviewResultA: {
+    npcName: 'INTERVIEWER',
+    lines: [
+      { text: '*scribbles enthusiastically*', delay: 300 },
+      { text: 'Perfect.', delay: 0 },
+      { text: 'Exactly what we look for.', delay: 800 },
+      { text: 'We hear that answer a lot, actually.', delay: 600 },
+      { text: 'A lot.', delay: 0 },
+      { text: 'You start Monday.', delay: 0 },
+    ],
+  },
+  interviewResultB: {
+    npcName: 'INTERVIEWER',
+    lines: [
+      { text: '...', delay: 2200 },
+      { text: 'Right.', delay: 1000 },
+      { text: '*makes a note*', delay: 0 },
+      { text: 'You start Monday.', delay: 0 },
+    ],
+  },
+  interviewResultC: {
+    npcName: 'INTERVIEWER',
+    lines: [
+      { text: '*stares*', delay: 3500 },
+      { text: '*writes something*', delay: 600 },
+      { text: 'You start Monday.', delay: 0 },
+    ],
+  },
+  phoneRing: {
+    npcName: '',
+    lines: [
+      { text: 'A phone rings somewhere in the office.', delay: 0 },
+    ],
+  },
   interviewer2: {
     npcName: 'INTERVIEWER 2',
     lines: [

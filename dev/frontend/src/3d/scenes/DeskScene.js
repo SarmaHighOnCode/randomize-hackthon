@@ -10,6 +10,9 @@ export class DeskScene {
     this.bootProgress = 0;
     this.booting = false;
     this.totalTime = 0;
+    // 'welcome' → 'glitch' → 'terminal'
+    this.bootStage = 'welcome';
+    this.pendingTasks = 1492;
 
     // Cinematic camera
     this.cameraStart = new THREE.Vector3(0, 1.4, 1.5);
@@ -103,7 +106,10 @@ export class DeskScene {
 
     // Start boot sequence
     setTimeout(() => {
-        this.booting = true;
+      this.booting = true;
+      this.bootStage = 'welcome';
+      this.bootProgress = 0;
+      this.pendingTasks = 1492;
     }, 1000);
   }
 
@@ -111,19 +117,36 @@ export class DeskScene {
     this.totalTime += delta;
 
     if (this.booting) {
-      this.bootProgress += delta * 0.25; // Faster boot sequence
-      
-      // Camera dolly-in
-      const t = Math.min(this.bootProgress * 1.5, 1);
-      ctx.player.camera.position.lerpVectors(this.cameraStart, this.cameraEnd, t);
+      if (this.bootStage === 'welcome') {
+        this.bootProgress += delta * 0.55;
+        if (this.bootProgress >= 1.0) {
+          this.bootStage = 'glitch';
+          this.bootProgress = 0;
+        }
+      } else if (this.bootStage === 'glitch') {
+        this.bootProgress += delta * 1.4;
+        if (this.bootProgress >= 1.0) {
+          this.bootStage = 'terminal';
+          this.bootProgress = 0;
+        }
+      } else {
+        this.bootProgress += delta * 0.28;
+        // Pending tasks counter climbs while you watch
+        this.pendingTasks += Math.floor(delta * 25);
+      }
+
+      // Camera dolly-in only during terminal phase
+      if (this.bootStage === 'terminal') {
+        const t = Math.min(this.bootProgress * 1.4, 1);
+        ctx.player.camera.position.lerpVectors(this.cameraStart, this.cameraEnd, t);
+      }
       ctx.player.camera.lookAt(this.lookAtTarget);
 
       this.drawBootSequence();
       this.screenTexture.needsUpdate = true;
 
-      if (this.bootProgress >= 1.0) {
+      if (this.bootStage === 'terminal' && this.bootProgress >= 1.0) {
         this.booting = false;
-        // FINAL TRANSITION TO 2D WORKPLACE
         ctx.setFade(1.0);
         setTimeout(() => {
           useGameStore.getState().setGameState('2D_WORK');
@@ -137,18 +160,63 @@ export class DeskScene {
     const w = this.canvas.width;
     const h = this.canvas.height;
 
-    // Clear background
+    if (this.bootStage === 'welcome') {
+      // Cheery corporate welcome screen
+      c.fillStyle = '#0057b8';
+      c.fillRect(0, 0, w, h);
+      // White banner
+      c.fillStyle = '#ffffff';
+      c.fillRect(0, h * 0.25, w, h * 0.5);
+      c.fillStyle = '#0057b8';
+      c.font = 'bold 28px sans-serif';
+      c.textAlign = 'center';
+      c.fillText('WELCOME TO NEXUS CORP!', w / 2, h * 0.42);
+      c.font = '16px sans-serif';
+      c.fillText('Your Journey Starts Today :)', w / 2, h * 0.52);
+      c.fillStyle = '#ffffff';
+      c.font = '13px sans-serif';
+      c.fillText('INTERN_9921  |  Day 1 of Many™', w / 2, h * 0.78);
+      // Fade out at end
+      if (this.bootProgress > 0.75) {
+        c.fillStyle = `rgba(0,0,0,${(this.bootProgress - 0.75) * 4})`;
+        c.fillRect(0, 0, w, h);
+      }
+      return;
+    }
+
+    if (this.bootStage === 'glitch') {
+      // Screen corruption — horizontal tears, random blocks
+      c.fillStyle = '#000000';
+      c.fillRect(0, 0, w, h);
+      const glitchColors = ['#ff0000', '#00ffff', '#ffffff', '#ff00ff', '#0057b8'];
+      for (let i = 0; i < 18; i++) {
+        const gy = Math.random() * h;
+        const gh = Math.random() * 20 + 2;
+        const gx = (Math.random() - 0.5) * 60;
+        c.fillStyle = glitchColors[Math.floor(Math.random() * glitchColors.length)];
+        c.globalAlpha = Math.random() * 0.8 + 0.2;
+        c.fillRect(gx, gy, w, gh);
+      }
+      c.globalAlpha = 1;
+      // Scrambled text fragments
+      c.font = '14px monospace';
+      c.fillStyle = '#00ff00';
+      const junk = ['###ERROR###', 'NULL_PTR', '0x0000DEAD', 'REALLOCATING', '????????'];
+      for (let i = 0; i < 5; i++) {
+        c.fillText(junk[i % junk.length], Math.random() * w * 0.6, 40 + i * 55);
+      }
+      return;
+    }
+
+    // Terminal stage
     c.fillStyle = '#000000';
     c.fillRect(0, 0, w, h);
 
-    // CRT Scanlines overlay (subtle)
-    c.fillStyle = 'rgba(255, 255, 255, 0.03)';
-    for (let i = 0; i < h; i += 4) {
-      c.fillRect(0, i, w, 2);
-    }
+    // CRT scanlines
+    c.fillStyle = 'rgba(255,255,255,0.025)';
+    for (let i = 0; i < h; i += 4) c.fillRect(0, i, w, 2);
 
-    // Modern Terminal Look
-    c.font = '16px monospace';
+    c.font = '15px monospace';
     c.textAlign = 'left';
 
     const lines = [
@@ -156,39 +224,47 @@ export class DeskScene {
       '[  OK  ] Mounting shared volumes...',
       '[  OK  ] Connecting to Central Intelligence...',
       '[ WAIT ] Authenticating user: INTERN_9921...',
-      '[  OK  ] Persona matched. Welcome.',
-      '----------------------------------------',
+      '[  OK  ] Persona matched.',
+      '─────────────────────────────────────',
       'SYS_RESOURCES: 98% AVAILABLE',
-      'PENDING_TASKS: 1,492',
+      `PENDING_TASKS: ${this.pendingTasks.toLocaleString()}`,
       'PRIORITY: MAXIMUM',
+      '─────────────────────────────────────',
+      'REMINDER: Lunch is a privilege, not a right.',
     ];
 
-    const showCount = Math.floor(this.bootProgress * 15);
+    const showCount = Math.floor(this.bootProgress * (lines.length + 3));
     c.fillStyle = '#00ff00';
     for (let i = 0; i < Math.min(showCount, lines.length); i++) {
-        c.fillText(lines[i], 20, 40 + i * 25);
+      // Highlight the PENDING_TASKS line in red when it updates
+      if (lines[i].startsWith('PENDING_TASKS')) c.fillStyle = '#ff4444';
+      else c.fillStyle = '#00ff00';
+      c.fillText(lines[i], 20, 36 + i * 24);
     }
 
     // Progress bar
     const barW = w - 80;
     c.strokeStyle = '#00ff00';
-    c.strokeRect(40, h - 60, barW, 20);
+    c.lineWidth = 1;
+    c.strokeRect(40, h - 52, barW, 16);
     c.fillStyle = '#00ff00';
-    c.fillRect(43, h - 57, (barW - 6) * this.bootProgress, 14);
-    
-    // Booting label
-    c.font = '12px monospace';
-    c.fillText('LOADING WORK ENVIRONMENT...', 40, h - 75);
-    
-    // Random noise flicker
-    if (Math.random() > 0.98) {
-        c.fillStyle = 'rgba(0, 255, 0, 0.1)';
-        c.fillRect(0, 0, w, h);
+    c.fillRect(42, h - 50, (barW - 4) * this.bootProgress, 12);
+
+    c.font = '11px monospace';
+    c.fillStyle = '#00ff00';
+    c.fillText('LOADING WORK ENVIRONMENT...', 40, h - 60);
+
+    // Cursor blink
+    if (Math.floor(this.totalTime * 2) % 2 === 0) {
+      c.fillStyle = '#00ff00';
+      c.fillRect(20, 36 + Math.min(showCount, lines.length) * 24 - 18, 9, 16);
     }
   }
 
   cleanup() {
-      this.booting = false;
-      this.bootProgress = 0;
+    this.booting = false;
+    this.bootProgress = 0;
+    this.bootStage = 'welcome';
+    this.pendingTasks = 1492;
   }
 }
