@@ -136,7 +136,7 @@ export function createNPC(
   const skinMat = new THREE.MeshStandardMaterial({ color: skinTone, roughness: 0.7 });
   const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.8 });
 
-  // --- Torso ---
+  // --- Torso (pivot for lean animations) ---
   const torso = new THREE.Mesh(
     new THREE.CylinderGeometry(0.17, 0.22, 0.65, 8),
     bodyMat
@@ -153,31 +153,35 @@ export function createNPC(
   group.add(shoulders);
 
   // --- Arms ---
-  for (const side of [-1, 1]) {
-    const upperArm = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.06, 0.055, 0.35, 6),
-      bodyMat
-    );
-    upperArm.position.set(side * 0.3, 1.15, 0);
-    upperArm.rotation.z = side * 0.15;
-    group.add(upperArm);
+  const leftUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 6), bodyMat);
+  leftUpperArm.position.set(-0.3, 1.15, 0);
+  leftUpperArm.rotation.z = -0.15;
+  group.add(leftUpperArm);
 
-    const forearm = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.05, 0.045, 0.25, 6),
-      skinMat
-    );
-    forearm.position.set(side * 0.32, 0.9, 0.05);
-    forearm.rotation.z = side * 0.1;
-    forearm.rotation.x = -0.3;
-    group.add(forearm);
+  const rightUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 6), bodyMat);
+  rightUpperArm.position.set(0.3, 1.15, 0);
+  rightUpperArm.rotation.z = 0.15;
+  group.add(rightUpperArm);
 
-    const hand = new THREE.Mesh(
-      new THREE.BoxGeometry(0.06, 0.04, 0.06),
-      skinMat
-    );
-    hand.position.set(side * 0.33, 0.77, 0.1);
-    group.add(hand);
-  }
+  const leftForearm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.045, 0.25, 6), skinMat);
+  leftForearm.position.set(-0.32, 0.9, 0.05);
+  leftForearm.rotation.z = -0.1;
+  leftForearm.rotation.x = -0.3;
+  group.add(leftForearm);
+
+  const rightForearm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.045, 0.25, 6), skinMat);
+  rightForearm.position.set(0.32, 0.9, 0.05);
+  rightForearm.rotation.z = 0.1;
+  rightForearm.rotation.x = -0.3;
+  group.add(rightForearm);
+
+  const leftHand = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.06), skinMat);
+  leftHand.position.set(-0.33, 0.77, 0.1);
+  group.add(leftHand);
+
+  const rightHand = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.06), skinMat);
+  rightHand.position.set(0.33, 0.77, 0.1);
+  group.add(rightHand);
 
   // --- Neck ---
   const neck = new THREE.Mesh(
@@ -187,102 +191,94 @@ export function createNPC(
   neck.position.y = 1.42;
   group.add(neck);
 
-  // --- Head ---
-  const head = new THREE.Mesh(
-    new THREE.BoxGeometry(0.24, 0.26, 0.24),
-    skinMat
-  );
-  head.position.y = 1.58;
-  group.add(head);
+  // --- Head Group (pivot at neck level y=1.42) ---
+  // All face/hair/glasses parts are children so they rotate together with the head.
+  const headGroup = new THREE.Group();
+  headGroup.position.set(0, 1.42, 0);
+  group.add(headGroup);
 
-  // --- Eyes ---
+  // Positions below are relative to headGroup (subtract 1.42 from original world Y)
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.26, 0.24), skinMat);
+  head.position.set(0, 0.16, 0);
+  headGroup.add(head);
+
   for (const side of [-1, 1]) {
     const eye = new THREE.Mesh(
       new THREE.BoxGeometry(0.04, 0.03, 0.02),
       new THREE.MeshStandardMaterial({ color: 0xffffff })
     );
-    eye.position.set(side * 0.06, 1.6, 0.12);
-    group.add(eye);
+    eye.position.set(side * 0.06, 0.18, 0.12);
+    headGroup.add(eye);
 
     const pupil = new THREE.Mesh(
       new THREE.BoxGeometry(0.02, 0.025, 0.02),
       new THREE.MeshStandardMaterial({ color: 0x1a1a2a })
     );
-    pupil.position.set(side * 0.06, 1.6, 0.13);
-    group.add(pupil);
+    pupil.position.set(side * 0.06, 0.18, 0.13);
+    headGroup.add(pupil);
   }
 
-  // --- Mouth ---
   const mouth = new THREE.Mesh(
     new THREE.BoxGeometry(0.08, 0.015, 0.02),
     new THREE.MeshStandardMaterial({ color: 0x9a6a5a })
   );
-  mouth.position.set(0, 1.5, 0.12);
-  group.add(mouth);
+  mouth.position.set(0, 0.08, 0.12);
+  headGroup.add(mouth);
 
-  // --- Hair ---
   const hairMat = new THREE.MeshStandardMaterial({ color: hairColor, roughness: 0.9 });
   if (hairStyle === 'flat') {
     const hair = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.06, 0.26), hairMat);
-    hair.position.y = 1.74;
-    group.add(hair);
+    hair.position.y = 0.32;
+    headGroup.add(hair);
     for (const s of [-1, 1]) {
       const sideburn = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.26), hairMat);
-      sideburn.position.set(s * 0.14, 1.67, 0);
-      group.add(sideburn);
+      sideburn.position.set(s * 0.14, 0.25, 0);
+      headGroup.add(sideburn);
     }
   } else if (hairStyle === 'tall') {
     const hair = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.14, 0.26), hairMat);
-    hair.position.y = 1.78;
-    group.add(hair);
+    hair.position.y = 0.36;
+    headGroup.add(hair);
   } else if (hairStyle === 'side') {
     const hair = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.06, 0.26), hairMat);
-    hair.position.set(0.03, 1.74, 0);
-    group.add(hair);
+    hair.position.set(0.03, 0.32, 0);
+    headGroup.add(hair);
     const sweep = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.1, 0.26), hairMat);
-    sweep.position.set(-0.12, 1.7, 0);
-    group.add(sweep);
+    sweep.position.set(-0.12, 0.28, 0);
+    headGroup.add(sweep);
   }
 
-  // --- Glasses ---
   if (hasGlasses) {
     const glassMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
     for (const side of [-1, 1]) {
       const frame = new THREE.Mesh(new THREE.RingGeometry(0.03, 0.04, 4), glassMat);
-      frame.position.set(side * 0.06, 1.6, 0.135);
-      group.add(frame);
+      frame.position.set(side * 0.06, 0.18, 0.135);
+      headGroup.add(frame);
     }
     const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.01, 0.01), glassMat);
-    bridge.position.set(0, 1.6, 0.135);
-    group.add(bridge);
+    bridge.position.set(0, 0.18, 0.135);
+    headGroup.add(bridge);
     for (const side of [-1, 1]) {
       const lens = new THREE.Mesh(
         new THREE.PlaneGeometry(0.05, 0.05),
         new THREE.MeshStandardMaterial({ color: 0x8888ff, transparent: true, opacity: 0.15 })
       );
-      lens.position.set(side * 0.06, 1.6, 0.134);
-      group.add(lens);
+      lens.position.set(side * 0.06, 0.18, 0.134);
+      headGroup.add(lens);
     }
   }
 
-  // --- Tie ---
   if (hasTie) {
     const tieMat = new THREE.MeshStandardMaterial({ color: tieColor, roughness: 0.6 });
     const knot = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, 0.04), tieMat);
-    knot.position.set(0, 1.3, 0.18);
-    group.add(knot);
-    const tieBody = new THREE.Mesh(
-      new THREE.BoxGeometry(0.035, 0.3, 0.02),
-      tieMat
-    );
-    tieBody.position.set(0, 1.1, 0.19);
-    group.add(tieBody);
-    const tieTip = new THREE.Mesh(
-      new THREE.BoxGeometry(0.05, 0.04, 0.02),
-      tieMat
-    );
-    tieTip.position.set(0, 0.94, 0.19);
-    group.add(tieTip);
+    knot.position.set(0, -0.12, 0.18);
+    headGroup.add(knot);
+    const tieBody = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.3, 0.02), tieMat);
+    tieBody.position.set(0, -0.32, 0.19);
+    headGroup.add(tieBody);
+    const tieTip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.02), tieMat);
+    tieTip.position.set(0, -0.48, 0.19);
+    headGroup.add(tieTip);
   }
 
   if (label) {
@@ -291,6 +287,17 @@ export function createNPC(
 
   group.userData.isNPC = true;
   group.userData.idlePhase = Math.random() * Math.PI * 2;
+
+  // headGroup is the animation target — rotating it moves head + all face parts together
+  group.userData.parts = {
+    head: headGroup,
+    torso,
+    shoulders,
+    leftForearm,
+    rightForearm,
+    leftUpperArm,
+    rightUpperArm,
+  };
 
   return group;
 }
