@@ -293,62 +293,59 @@ export class InterviewScene {
     switch (this.phase) {
       case 'entering':
       case 'sitting':
-        // Interviewers sit back, arms on table — waiting, slightly bored
-        if (parts.torso) parts.torso.rotation.x += (-0.06 - parts.torso.rotation.x) * Math.min(1, 3 * delta);
+        // Bored waiting — slumped back, head lolling slightly
+        if (parts.torso) parts.torso.rotation.x += (-0.25 - parts.torso.rotation.x) * Math.min(1, 4 * delta);
         if (parts.head) {
-          parts.head.rotation.x += (-0.08 - parts.head.rotation.x) * Math.min(1, 2 * delta);
-          parts.head.rotation.y += (Math.sin(t * 0.2 + phaseOffset) * 0.06 - parts.head.rotation.y) * Math.min(1, 1.5 * delta);
+          parts.head.rotation.x += (-0.3 - parts.head.rotation.x) * Math.min(1, 3 * delta);
+          parts.head.rotation.y += (Math.sin(t * 0.4 + phaseOffset) * 0.25 - parts.head.rotation.y) * Math.min(1, 2 * delta);
         }
-        if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.15;
-        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.15;
-        npc.position.y = baseY + Math.sin(t * 0.9 + phaseOffset) * 0.004;
+        if (parts.leftForearm)  parts.leftForearm.rotation.x = -0.4;
+        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.4;
+        npc.position.y = baseY + Math.sin(t * 0.9 + phaseOffset) * 0.015;
         break;
 
       case 'dialogue_start':
       case 'result':
-        // Leaning slightly forward, engaged — subtle "interviewer mode"
-        if (parts.torso) parts.torso.rotation.x += (0.1 - parts.torso.rotation.x) * Math.min(1, 3 * delta);
+        // Leans forward aggressively, head bobs while talking, papers shuffle
+        if (parts.torso) parts.torso.rotation.x += (0.35 - parts.torso.rotation.x) * Math.min(1, 4 * delta);
         if (parts.head) {
-          // Head bobs slightly while speaking
-          parts.head.rotation.x += (Math.sin(t * 2.5 + phaseOffset) * 0.04 - parts.head.rotation.x) * Math.min(1, 4 * delta);
+          parts.head.rotation.x += (Math.sin(t * 3.0 + phaseOffset) * 0.2 - parts.head.rotation.x) * Math.min(1, 5 * delta);
         }
-        // "Shuffling papers" — forearm rocks side to side
-        if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.25 + Math.sin(t * 1.8 + phaseOffset) * 0.07;
-        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.25 - Math.sin(t * 1.8 + phaseOffset) * 0.05;
-        npc.position.y = baseY + Math.sin(t * 1.4 + phaseOffset) * 0.008;
+        if (parts.leftForearm)  parts.leftForearm.rotation.x = -0.2 + Math.sin(t * 2.5 + phaseOffset) * 0.35;
+        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.2 - Math.sin(t * 2.5 + phaseOffset) * 0.35;
+        npc.position.y = baseY + Math.sin(t * 1.8 + phaseOffset) * 0.025;
         break;
 
       case 'choosing':
-        // Interviewers sit back, arms folded, watching — eerie stillness
-        if (parts.torso) parts.torso.rotation.x += (-0.04 - parts.torso.rotation.x) * Math.min(1, 2 * delta);
+        // Dead still — both interviewers lock eyes on player, no movement
+        if (parts.torso) parts.torso.rotation.x += (0.1 - parts.torso.rotation.x) * Math.min(1, 3 * delta);
         if (parts.head) {
-          // Slow, deliberate tilt toward the player
-          parts.head.rotation.x += (-0.05 - parts.head.rotation.x) * Math.min(1, 1.5 * delta);
-          parts.head.rotation.y += (0 - parts.head.rotation.y) * Math.min(1, 2 * delta);
+          parts.head.rotation.x += (0.15 - parts.head.rotation.x) * Math.min(1, 3 * delta);
+          parts.head.rotation.y += (0 - parts.head.rotation.y) * Math.min(1, 4 * delta);
         }
-        if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.1;
-        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.1;
-        npc.position.y = baseY + Math.sin(t * 0.5 + phaseOffset) * 0.002;
+        if (parts.leftForearm)  parts.leftForearm.rotation.x = -0.3;
+        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.3;
+        npc.position.y = baseY; // zero movement — unnerving
         break;
 
       case 'hired':
       case 'farewell':
-        // Interviewer 2 leans forward excitedly, interviewer 1 relaxes back
+        // Interviewer 2 visibly leans forward in excitement, 1 leans back smug
         if (parts.torso) {
-          const targetLean = phaseOffset < 1 ? 0.14 : -0.05;
-          parts.torso.rotation.x += (targetLean - parts.torso.rotation.x) * Math.min(1, 3 * delta);
+          const targetLean = phaseOffset < 1 ? 0.5 : -0.2;
+          parts.torso.rotation.x += (targetLean - parts.torso.rotation.x) * Math.min(1, 4 * delta);
         }
         if (parts.head) {
-          parts.head.rotation.x += (0.05 - parts.head.rotation.x) * Math.min(1, 2.5 * delta);
-          parts.head.rotation.y += (Math.sin(t * 0.4 + phaseOffset) * 0.05 - parts.head.rotation.y) * Math.min(1, 2 * delta);
+          parts.head.rotation.x += (0.2 - parts.head.rotation.x) * Math.min(1, 3 * delta);
+          parts.head.rotation.y += (Math.sin(t * 0.6 + phaseOffset) * 0.2 - parts.head.rotation.y) * Math.min(1, 3 * delta);
         }
-        if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.3 + Math.sin(t * 1.2 + phaseOffset) * 0.06;
-        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.3 - Math.sin(t * 1.2 + phaseOffset) * 0.06;
-        npc.position.y = baseY + Math.sin(t * 1.1 + phaseOffset) * 0.006;
+        if (parts.leftForearm)  parts.leftForearm.rotation.x = -0.2 + Math.sin(t * 2.0 + phaseOffset) * 0.3;
+        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.2 - Math.sin(t * 2.0 + phaseOffset) * 0.3;
+        npc.position.y = baseY + Math.sin(t * 1.4 + phaseOffset) * 0.02;
         break;
 
       default:
-        npc.position.y = baseY + Math.sin(t * 0.8 + phaseOffset) * 0.003;
+        npc.position.y = baseY + Math.sin(t * 0.8 + phaseOffset) * 0.01;
     }
   }
 

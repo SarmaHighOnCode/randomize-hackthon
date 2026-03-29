@@ -361,22 +361,22 @@ export class LobbyScene {
     if (this.receptionistNPC) {
       const parts = this.receptionistNPC.userData.parts;
       if (parts) {
-        // Mechanical typing — robotic, perfectly metronomic (fitting "GREETING UNIT")
-        const typeCycle = Math.sin(t * 5.0);
-        if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.3 + typeCycle * 0.12;
-        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.3 - typeCycle * 0.12;
+        // Mechanical typing — fast and robotic (GREETING UNIT)
+        const typeCycle = Math.sin(t * 8.0);
+        if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.1 + typeCycle * 0.5;
+        if (parts.rightForearm) parts.rightForearm.rotation.x = -0.1 - typeCycle * 0.5;
 
-        // Head: sweeps slowly side to side as if scanning for threats
+        // Head: wide slow scan side-to-side, clearly visible
         if (parts.head) {
-          parts.head.rotation.y = Math.sin(t * 0.5) * 0.2;
-          parts.head.rotation.x = -0.05; // Slight downward tilt at keyboard
+          parts.head.rotation.y = Math.sin(t * 0.6) * 0.55;
+          parts.head.rotation.x = -0.25; // Clearly looking down at keyboard
         }
 
-        // Torso: perfectly upright, no hunching — uncanny stillness
-        if (parts.torso) parts.torso.rotation.x = 0;
+        // Torso: slight mechanical forward pump with typing
+        if (parts.torso) parts.torso.rotation.x = 0.1 + Math.abs(Math.sin(t * 8.0)) * 0.15;
       }
-      // Almost zero vertical drift — inhuman stillness
-      this.receptionistNPC.position.y = this.receptionistBaseY + Math.sin(t * 0.7) * 0.003;
+      // Barely perceptible — inhuman
+      this.receptionistNPC.position.y = this.receptionistBaseY + Math.sin(t * 0.7) * 0.008;
     }
 
     // Occasional fluorescent flicker — picks one random light, dims it briefly

@@ -239,28 +239,26 @@ export class OfficeScene {
       const phase = npc.userData.idlePhase ?? 0;
       const t = this.totalTime + phase;
 
-      // Typing rhythm: alternating forearm tap, slow and mechanical
-      const typingCycle = Math.sin(t * 3.8 + i * 0.9);
-      if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.3 + typingCycle * 0.09;
-      if (parts.rightForearm) parts.rightForearm.rotation.x = -0.3 - typingCycle * 0.09;
+      // Aggressive typing: fast alternating forearm hammering
+      const typingCycle = Math.sin(t * 6.0 + i * 0.9);
+      if (parts.leftForearm)  parts.leftForearm.rotation.x  = -0.2 + typingCycle * 0.45;
+      if (parts.rightForearm) parts.rightForearm.rotation.x = -0.2 - typingCycle * 0.45;
 
-      // Slight torso forward lean (hunched over desk)
-      if (parts.torso) parts.torso.rotation.x = 0.07 + Math.sin(t * 0.4) * 0.015;
+      // Visible hunch — torso rocks forward/back while typing
+      if (parts.torso) parts.torso.rotation.x = 0.3 + Math.sin(t * 3.0 + i) * 0.15;
 
-      // Head: normally tilted slightly down (reading screen),
-      // occasionally slowly raises to look at something, then back down
+      // Head: dramatically snaps between staring at screen and glancing up
       if (parts.head) {
-        const lookUp = Math.sin(t * 0.18 + i * 1.7) > 0.72
-          ? 0.12   // briefly glances up
-          : -0.14; // back to staring at screen
-        parts.head.rotation.x += (lookUp - parts.head.rotation.x) * Math.min(1, 1.5 * delta);
-        // Very slow side-to-side micro-sway (dead-eyed stare drift)
-        parts.head.rotation.y = Math.sin(t * 0.22 + i * 2.3) * 0.04;
+        const lookUp = Math.sin(t * 0.2 + i * 1.7) > 0.65
+          ? 0.35   // noticeably looks up
+          : -0.45; // hard stare down at screen
+        parts.head.rotation.x += (lookUp - parts.head.rotation.x) * Math.min(1, 4.0 * delta);
+        parts.head.rotation.y = Math.sin(t * 0.3 + i * 2.3) * 0.2;
       }
 
-      // Whole-group very subtle vertical drift (breathing)
+      // Visible breathing bob
       const baseY = npc.userData.baseY ?? (npc.userData.baseY = npc.position.y);
-      npc.position.y = baseY + Math.sin(t * 0.9) * 0.005;
+      npc.position.y = baseY + Math.sin(t * 1.8 + i) * 0.04;
     });
 
     // Phone ring event — fires once ~5 seconds after entering
