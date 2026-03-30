@@ -519,6 +519,14 @@
   flex-direction: column;
   gap: 2px;
   background: #fff;
+  min-height: 40px;
+  transition: background 0.15s;
+}
+
+.nxos-col-body.drag-over {
+  background: #e8e8ff;
+  outline: 2px dashed #000080;
+  outline-offset: -2px;
 }
 
 .nxos-col-body::-webkit-scrollbar { width: 16px; }

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { generatePuzzle, OFFLINE_TASKS, MEETING_TEMPLATES, MEETING_DIALOGUES, SLACK_MESSAGES, REALISM_EVENTS } from './puzzleEngine'
+import { generatePuzzle, OFFLINE_TASKS, getRandomOfflineTask, resetPool, MEETING_TEMPLATES, MEETING_DIALOGUES, SLACK_MESSAGES, REALISM_EVENTS } from './puzzleEngine'
 
 // ─── Gemini API (task generation) ────────────────────────────────
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
@@ -30,7 +30,7 @@ const fetchGeminiTask = async () => {
   return null
 }
 
-// ─── Shuffled offline task pool ──────────────────────────────────
+// ─── Random offline task selection ───────────────────────────────
 let taskIdCounter = 0
 let spawnCounter = 0
 
@@ -43,23 +43,8 @@ const shuffleArray = (arr) => {
   return a
 }
 
-let taskPool = shuffleArray(OFFLINE_TASKS)
-let poolIndex = 0
-
-const resetPool = () => {
-  taskPool = shuffleArray(OFFLINE_TASKS)
-  poolIndex = 0
-}
-
-const getNextOfflineTask = () => {
-  if (!taskPool.length || poolIndex >= taskPool.length) resetPool()
-  const template = taskPool[poolIndex++]
-  if (!template) {
-    resetPool()
-    return taskPool[0] || { title: 'Fix unknown bug', priority: 'MEDIUM', points: 10 }
-  }
-  return template
-}
+// Uses the new random task generator from puzzleEngine (500 seed + procedural)
+const getNextOfflineTask = () => getRandomOfflineTask()
 
 // ─── Email templates ─────────────────────────────────────────────
 const EMAIL_TEMPLATES = [

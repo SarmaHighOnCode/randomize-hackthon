@@ -735,16 +735,20 @@ const ShadowJiraContent = () => {
   const completeTask = useWorkStore(s => s.completeTask)
   const moveToInProgress = useWorkStore(s => s.moveToInProgress)
   const burnout = useWorkStore(s => s.burnout)
+  const [dragOverCol, setDragOverCol] = useState(null)
   const backlog = tasks.filter(t => t.status === 'backlog' && !t.expired)
   const inProgress = tasks.filter(t => t.status === 'in_progress')
   const done = tasks.filter(t => t.status === 'done').slice(-6)
-  const handleDrop = (e, s) => { e.preventDefault(); const id = e.dataTransfer.getData('taskId'); if (s === 'in_progress') { moveToInProgress(id); playBlip(0.2) } else if (s === 'done') { completeTask(id); playBlip() } }
+  const handleDrop = (e, s) => { e.preventDefault(); setDragOverCol(null); const id = e.dataTransfer.getData('taskId'); if (s === 'in_progress') { moveToInProgress(id); playBlip(0.2) } else if (s === 'done') { completeTask(id); playBlip() } }
+  const handleDragOver = (e, col) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverCol(col) }
+  const handleDragLeave = () => { setDragOverCol(null) }
   const TaskCard = ({ task }) => {
     const elapsed = (Date.now() - task.createdAt) / 1000
     const remaining = Math.max(0, task.deadline - elapsed)
     const urgent = remaining < 15
     return (
-      <div className={`nxos-task-card ${urgent?'urgent':''}`} draggable onDragStart={e=>e.dataTransfer.setData('taskId',task.id)}
+      <div className={`nxos-task-card ${urgent?'urgent':''}`} draggable="true"
+        onDragStart={e=>{e.dataTransfer.setData('taskId',task.id);e.dataTransfer.effectAllowed='move'}}
         onClick={()=>{ if (task.status==='backlog'){moveToInProgress(task.id);playBlip(0.2)} else if(task.status==='in_progress'){completeTask(task.id);playBlip()} }}>
         <div className="nxos-task-hdr"><span className="nxos-task-id">{task.id}{task.aiGenerated?' 🤖':''}</span><span style={{color:PRIORITY_COLORS[task.priority],fontSize:'0.55rem',fontWeight:'bold'}}>{task.priority}</span></div>
         <div className="nxos-task-title">{garble(task.title, burnout)}</div>
@@ -754,9 +758,9 @@ const ShadowJiraContent = () => {
   }
   return (
     <div className="nxos-jira-board">
-      <div className="nxos-jira-col" onDrop={e=>handleDrop(e,'backlog')} onDragOver={e=>e.preventDefault()}><div className="nxos-col-hdr backlog">BACKLOG ({backlog.length})</div><div className="nxos-col-body">{backlog.map(t=><TaskCard key={t.id} task={t}/>)}</div></div>
-      <div className="nxos-jira-col" onDrop={e=>handleDrop(e,'in_progress')} onDragOver={e=>e.preventDefault()}><div className="nxos-col-hdr progress">IN PROGRESS ({inProgress.length})</div><div className="nxos-col-body">{inProgress.map(t=><TaskCard key={t.id} task={t}/>)}</div></div>
-      <div className="nxos-jira-col" onDrop={e=>handleDrop(e,'done')} onDragOver={e=>e.preventDefault()}><div className="nxos-col-hdr done">DONE ({done.length})</div><div className="nxos-col-body">{done.map(t=>(<div key={t.id} className={`nxos-task-card done ${t.expired?'expired':''}`}><span className="nxos-task-id">{t.id}</span><span className="nxos-task-title">{t.expired?'⚠ EXPIRED':'✓'} {t.title}</span></div>))}</div></div>
+      <div className="nxos-jira-col"><div className="nxos-col-hdr backlog">BACKLOG ({backlog.length})</div><div className={`nxos-col-body ${dragOverCol==='backlog'?'drag-over':''}`} onDrop={e=>handleDrop(e,'backlog')} onDragOver={e=>handleDragOver(e,'backlog')} onDragLeave={handleDragLeave}>{backlog.map(t=><TaskCard key={t.id} task={t}/>)}</div></div>
+      <div className="nxos-jira-col"><div className="nxos-col-hdr progress">IN PROGRESS ({inProgress.length})</div><div className={`nxos-col-body ${dragOverCol==='in_progress'?'drag-over':''}`} onDrop={e=>handleDrop(e,'in_progress')} onDragOver={e=>handleDragOver(e,'in_progress')} onDragLeave={handleDragLeave}>{inProgress.map(t=><TaskCard key={t.id} task={t}/>)}</div></div>
+      <div className="nxos-jira-col"><div className="nxos-col-hdr done">DONE ({done.length})</div><div className={`nxos-col-body ${dragOverCol==='done'?'drag-over':''}`} onDrop={e=>handleDrop(e,'done')} onDragOver={e=>handleDragOver(e,'done')} onDragLeave={handleDragLeave}>{done.map(t=>(<div key={t.id} className={`nxos-task-card done ${t.expired?'expired':''}`}><span className="nxos-task-id">{t.id}</span><span className="nxos-task-title">{t.expired?'⚠ EXPIRED':'✓'} {t.title}</span></div>))}</div></div>
     </div>
   )
 }
