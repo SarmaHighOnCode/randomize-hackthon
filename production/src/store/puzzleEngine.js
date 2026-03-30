@@ -856,6 +856,10 @@ export const OFFLINE_TASKS = SEED_TASKS
  * Returns a random task — either from the seed pool or procedurally generated.
  * Called by useWorkStore when Gemini API is unavailable.
  */
+export const resetPool = () => {
+  _recentTitles.clear()
+}
+
 export const getRandomOfflineTask = () => {
   if (Math.random() < 0.3) {
     // 30% chance: pick from hand-crafted seed pool

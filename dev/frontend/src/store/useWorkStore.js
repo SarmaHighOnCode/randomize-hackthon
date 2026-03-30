@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { generatePuzzle, OFFLINE_TASKS, getRandomOfflineTask, MEETING_TEMPLATES, MEETING_DIALOGUES, SLACK_MESSAGES, REALISM_EVENTS } from './puzzleEngine'
+import { generatePuzzle, OFFLINE_TASKS, getRandomOfflineTask, resetPool, MEETING_TEMPLATES, MEETING_DIALOGUES, SLACK_MESSAGES, REALISM_EVENTS } from './puzzleEngine'
 
 // ─── Gemini API (task generation) ────────────────────────────────
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
